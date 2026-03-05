@@ -2368,4 +2368,10 @@ config KEEMBAY_WATCHDOG
 	  To compile this driver as a module, choose M here: the
 	  module will be called keembay_wdt.
 
+config PC9202_WATCHDOG
+	bool "Watchdog PC9202 driver"
+	depends on I2C
+	help
+	  Enable this to add PC9202 watchdog support.
+
 endif # WATCHDOG
