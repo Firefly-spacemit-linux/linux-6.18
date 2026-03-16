@@ -1,0 +1,34 @@
+
+上电自动升级：
+配置：
+/data/_gt1x_config_.cfg 或者 /sdcard/_gt1x_config_.cfg
+固件：
+/data/_goodix_update_.bin 或者  /sdcard/_goodix_update_.bin
+
+（下列为调试接口，后续可能会改动或者删除，不保证一直有效！！！）
+
+1、update firmware
+adb push x:\xxx\xxx\xxx.bin /data/
+adb shell
+echo update "/data/xxx.bin" > /proc/gt1x_debug
+
+2、send config
+adb push x:\xxx\xxx\xxx.cfg /data/
+adb shell
+echo sendconfig "/data/xxx.cfg" > /proc/gt1x_debug
+
+3、reset
+adb shell
+echo reset > /proc/gt1x_debug
+
+4、enable irq
+adb shell
+echo int 1 > /proc/gt1x_debug
+
+5、disable irq
+adb shell
+echo int 0 > /proc/gt1x_debug
+
+6、show config
+adb shell
+cat /proc/gt1x_debug

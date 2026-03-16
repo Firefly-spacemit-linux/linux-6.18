@@ -429,6 +429,9 @@ config TOUCHSCREEN_GOODIX_BERLIN_SPI
 	  To compile this driver as a module, choose M here: the
 	  module will be called goodix_berlin_spi.
 
+config TOUCHSCREEN_GT1X
+	tristate "GT1X touchscreens support"
+
 config TOUCHSCREEN_GT9XXX
 	tristate "Goodix gt9xx support for Firefly product"
 	depends on I2C
