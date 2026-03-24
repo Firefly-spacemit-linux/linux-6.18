@@ -35,6 +35,7 @@ early_param("hostname", early_hostname);
 const char linux_proc_banner[] =
 	"%s version %s"
 	" (" LINUX_COMPILE_BY "@" LINUX_COMPILE_HOST ")"
+	" (" LINUX_BRANCH ": " LINUX_COMMIT "/" LINUX_COMPILE_TIME ") (" XML_NAME ")"
 	" (" LINUX_COMPILER ") %s\n";
 
 BUILD_SALT;
