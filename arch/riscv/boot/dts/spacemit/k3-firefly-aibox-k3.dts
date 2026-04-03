@@ -11,6 +11,7 @@
 #define FF_SDCARD
 #define FF_PCIE
 #define FF_WATCHDOG
+#define FF_RTC
 
 #include "k3-firefly-aibox-k3.dtsi"
 
