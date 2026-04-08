@@ -48,6 +48,7 @@ source "drivers/video/fbdev/Kconfig"
 endmenu
 
 source "drivers/video/backlight/Kconfig"
+source "drivers/video/LT2404/Kconfig"
 
 config VGASTATE
        tristate

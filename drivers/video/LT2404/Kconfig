@@ -1,0 +1,9 @@
+config LT2404
+	tristate "LT2404 Driver"
+	default m
+	help
+          Control LT2404 Chip
+          Select m:build as a separate module;
+          Select y:Build into the kernel
+          Select n:Not build
+
