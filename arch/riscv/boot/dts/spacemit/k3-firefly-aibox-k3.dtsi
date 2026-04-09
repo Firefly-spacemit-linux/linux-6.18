@@ -35,6 +35,20 @@
                 pinctrl-0 = <&usb30_vcc5v0_en_cfg>;
                 status = "okay";
  	};
+
+ 	vcc5v0_usb_host: vcc5v0-usb-host-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb30_host";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(77) GPIO_ACTIVE_HIGH>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&usb20_vcc5v0_en_cfg>;
+                status = "okay";
+ 	};
 #endif
 
 #ifdef FF_USB20_HUB
@@ -686,6 +700,14 @@
 #endif
 
 #ifdef FF_USB30_TYPEA
+	usb20_vcc5v0_en_cfg: usb20-vcc5v0-en-cfg {
+		pinmux = <K3_PADCONF(77, 0)>;
+
+		bias-disable;			/* normal bias disable */
+		drive-strength = <25>;		/* DS8 */
+		power-source = <3300>;
+	};
+
 	usb30_vcc5v0_en_cfg: usb30-vcc5v0-en-cfg {
 		pinmux = <K3_PADCONF(78, 0)>;
 
