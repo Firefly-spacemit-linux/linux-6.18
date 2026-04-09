@@ -2,7 +2,7 @@
 
 #define FW_FILE			"LT2404.bin"
 #define LT2404_SRAM_PAGE_SIZE	256
-#define FW_BUFF_SIZE		(32 * 1024)      //64KB Firmware area size
+#define FW_BUFF_SIZE		(64 * 1024)      //64KB Firmware area size
 
 const struct firmware *fw = NULL;
 u8 Fw_Crc_Value;
