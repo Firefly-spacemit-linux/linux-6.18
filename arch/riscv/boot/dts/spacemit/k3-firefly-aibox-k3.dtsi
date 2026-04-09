@@ -168,9 +168,16 @@
 		interrupt-parent = <&gpio>;
 		interrupts = <K3_GPIO(101) IRQ_TYPE_LEVEL_LOW>;
 		wakeup-source;
-};
+	};
 #endif
 };
+
+#ifdef FF_RTC
+// only use pcf8563 rtc
+&rpmi_rtc {
+	status = "disalbed";
+};
+#endif
 
 #ifdef FF_UART0
 &uart0 {
