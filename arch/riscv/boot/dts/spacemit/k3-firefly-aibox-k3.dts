@@ -15,6 +15,7 @@
 #define FF_RTC
 #define FF_USB20_HUB
 #define FF_USB30_TYPEA
+#define FF_BOOT_KEY
 
 #include "k3-firefly-aibox-k3.dtsi"
 
