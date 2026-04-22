@@ -88,8 +88,6 @@
 		regulator-name = "vcc3v3_pcie";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		regulator-always-on;
-		regulator-boot-on;
 		enable-active-high;
 		gpio = <&gpio K3_GPIO(73) GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&pcie_pwr_en_cfg>;
@@ -269,6 +267,7 @@
 	phy-names = "phy0", "phy1";
 
 	num-lanes = <4>;
+	vpcie3v3-supply = <&vcc3v3_pcie>;
 	status = "okay";
 };
 #endif
@@ -698,6 +697,18 @@
 			bias-disable;			/* normal bias disable */
 			drive-strength = <25>;		/* DS8 */
 			power-source = <1800>;
+		};
+	};
+
+	pcie0-1-cfg {
+		pcie0-0-pins {
+			pinmux = <K3_PADCONF(79, 5)>,	/* pcie0 perst */
+				 <K3_PADCONF(80, 5)>,	/* pcie0 wake */
+				 <K3_PADCONF(81, 5)>;	/* pcie0 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
 		};
 	};
 #endif
