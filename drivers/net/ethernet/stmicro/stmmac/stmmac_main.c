@@ -53,6 +53,9 @@
 #include "dwxgmac2.h"
 #include "hwif.h"
 
+#define RTL_8211F_CG_PHY_ID  0x001cc916
+#define RTL_8211F_VD_CG_PHY_ID  0x001cc878
+
 /* As long as the interface is active, we keep the timestamping counter enabled
  * with fine resolution and binary rollover. This avoid non-monotonic behavior
  * (clock jumps) when changing timestamping settings at runtime.
@@ -7373,6 +7376,75 @@ static const struct xdp_metadata_ops stmmac_xdp_metadata_ops = {
 	.xmo_rx_timestamp		= stmmac_xdp_rx_timestamp,
 };
 
+static int phy_rtl8211f_led_fixup(struct phy_device *phydev)
+{
+    int value;
+    printk("firefly %s in\n", __func__);
+
+    value = phy_read(phydev, 31);
+    phy_write(phydev, 31, 0xd04);
+
+    mdelay(10);
+    value = phy_read(phydev, 16);
+    value =0x6940;
+    phy_write(phydev, 16, value);
+
+    mdelay(10);
+    phy_read(phydev, 31);
+    phy_write(phydev, 31, 0x00);
+
+       /*--- PHY spread spectrum ---*/
+       //Enable RXC SSC
+       phy_write(phydev, 31, 0xC44);
+       phy_write(phydev, 19, 0x5F00);
+       phy_write(phydev, 31, 0x00);
+
+       //Enable Sys Clock SSC
+       phy_write(phydev, 31, 0xC44);
+       phy_write(phydev, 23, 0x4F00);
+       phy_write(phydev, 31, 0xA43);
+       value = phy_read(phydev, 25);
+       value = value | 0x8;
+       phy_write(phydev, 25, value);
+       phy_write(phydev, 31, 0x00);
+
+       //Enable CLK_OUT SSC
+       phy_write(phydev, 31, 0xD09);
+       phy_write(phydev, 16, 0xCF00);
+       phy_write(phydev, 31, 0xA43);
+       value = phy_read(phydev, 25);
+       value = value | 0x80;
+       phy_write(phydev, 25, value);
+       phy_write(phydev, 31, 0x00);
+
+
+       /*--- Disable the 125M clock input to the SOC ---*/
+       //Disable CLK_OUT
+       phy_write(phydev, 31, 0xA43);
+       value = phy_read(phydev, 25);
+       value = value & ~(0x1);
+       phy_write(phydev, 25, value);
+       phy_write(phydev, 31, 0x00);
+
+
+       mdelay(10);
+
+       /*--- Disable the 125M clock input to the SOC ---*/
+   //Disable CLK_OUT(For 8211F(D)-VD)
+   phy_write(phydev, 31, 0x0D05); 
+   phy_write(phydev, 17, 0XE02);
+        phy_write(phydev, 31, 0x00);
+
+
+       mdelay(10);
+
+
+           /*--- Reset PHY ---*/
+       phy_write(phydev, 0, 0x9200);
+       mdelay(10);
+    return 0;
+}
+
 /**
  * stmmac_dvr_probe
  * @device: device pointer
@@ -7649,6 +7721,13 @@ int stmmac_dvr_probe(struct device *device,
 			__func__, ret);
 		goto error_netdev_register;
 	}
+
+	ret = phy_register_fixup_for_uid(RTL_8211F_CG_PHY_ID, 0xffffffff, phy_rtl8211f_led_fixup);
+        if (ret)
+                pr_warn("Cannot register 8211f PHY board fixup.\n");
+        ret = phy_register_fixup_for_uid(RTL_8211F_VD_CG_PHY_ID, 0xffffffff, phy_rtl8211f_led_fixup);
+        if (ret)
+                pr_warn("Cannot register 8211f PHY board fixup.\n");
 
 #ifdef CONFIG_DEBUG_FS
 	stmmac_init_fs(ndev);
