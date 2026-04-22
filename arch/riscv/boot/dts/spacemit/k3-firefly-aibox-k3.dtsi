@@ -176,6 +176,15 @@
 		};
 	};
 #endif
+
+	gpio_poweroff: gpio-poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&gpio K3_GPIO(88) GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&shutdown_pwr_cfg>;
+		/* only drive the pin low until device is off */
+		active-delay-ms = <3000>;
+	};
 };
 
 &i2c1 {
@@ -797,4 +806,13 @@
 		};
 	};
 #endif
+	shutdown_pwr_cfg: shutdown-pwr-cfg {
+		shutdown-pwr-pin {
+			pinmux = <K3_PADCONF(88, 0)>;
+
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
 };
