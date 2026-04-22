@@ -162,16 +162,23 @@
 */
 #endif
 
-#ifdef FF_BOOT_KEY
+#ifdef FF_KEY
 	gpio_keys: gpio-keys {
 		compatible = "gpio-keys";
 		pinctrl-names = "default";
-		pinctrl-0 = <&boot_key_cfg>;
+		pinctrl-0 = <&boot_key_cfg>, <&power_key_cfg>;
 
 		button-boot {
 			label = "boot";
 			linux,code = <KEY_F12>;
 			gpios = <&gpio K3_GPIO(69) GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+
+		button-power {
+			label = "power";
+			linux,code = <KEY_POWER>;
+			gpios = <&gpio K3_GPIO(84) GPIO_ACTIVE_LOW>;
 			debounce-interval = <50>;
 		};
 	};
@@ -795,7 +802,7 @@
 	};
 #endif
 
-#ifdef FF_BOOT_KEY
+#ifdef FF_KEY
 	boot_key_cfg: boot-key-cfg {
 		boot-key-pin {
 			pinmux = <K3_PADCONF(69, 0)>;
@@ -803,6 +810,16 @@
 			bias-disable;
 			drive-strength = <25>;
 			power-source = <1800>;
+		};
+	};
+
+	power_key_cfg: power-key-cfg {
+		power-key-pin {
+			pinmux = <K3_PADCONF(84, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <3300>;
 		};
 	};
 #endif
