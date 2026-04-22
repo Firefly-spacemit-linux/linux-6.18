@@ -400,9 +400,6 @@
 		compatible = "firefly,pc9202";
 		reg = <0x3c>;
 		index = <1>;
-		pinctrl-names = "wdt_base";
-		pinctrl-0 =<&wdt_base_cfg>;
-		wd-en-gpio = <&gpio K3_GPIO(77) GPIO_ACTIVE_HIGH>; 
 		driver-names = "wdt_base";
 	};
 #endif
@@ -758,18 +755,6 @@
 	usbc0_int_cfg: usbc0-int-cfg {
 		usbc0-int-pin {
 			pinmux = <K3_PADCONF(58, 0)>;
-
-			bias-pull-up;			/* normal pull-up */
-			drive-strength = <25>;		/* DS8 */
-			power-source = <1800>;
-		};
-	};
-#endif
-
-#ifdef FF_WATCHDOG
-	watchdog {
-		wdt_base_cfg: wdt-base-cfg {
-			pinmux = <K3_PADCONF(77, 0)>;
 
 			bias-pull-up;			/* normal pull-up */
 			drive-strength = <25>;		/* DS8 */
