@@ -43,6 +43,11 @@
 #define DRIVER_DESC "Realtek RTL8152/RTL8153 Based USB Ethernet Adapters"
 #define MODULENAME "r8152"
 
+/* LED1: Activity, LED2: Link */
+static int ledsel = 0x6C60;
+module_param(ledsel, int, 0);
+MODULE_PARM_DESC(ledsel, "Override default LED configuration");
+
 #define PATENTS		"This product is covered by one or more of the " \
 			"following patents:\n" \
 			"\t\tUS6,570,884, US6,115,776, and US6,327,625.\n"
@@ -13515,6 +13520,9 @@ static int r8153b_init(struct r8152 *tp)
 				RX_AGG_DISABLE | RX_ZERO_EN);
 	if (ret < 0)
 		goto out;
+
+	/* set customized led */
+	ocp_write_word(tp, MCU_TYPE_PLA, PLA_LEDSEL, ledsel);
 
 	ret = rtl_tally_reset(tp);
 	if (ret < 0)
