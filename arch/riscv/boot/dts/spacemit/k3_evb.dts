@@ -488,10 +488,6 @@
 	pinctrl-0 = <&gmac0_cfg>;
 
 	max-speed = <1000>;
-	tx-fifo-depth = <8192>;
-	rx-fifo-depth = <8192>;
-	snps,tso;
-	snps,force_sf_dma_mode;
 	phy-mode = "rgmii";
 	phy-handle = <&gmac0_phy>;
 	snps,reset-gpios = <&gpio 0 15 GPIO_ACTIVE_LOW>;
@@ -544,10 +540,6 @@
 	pinctrl-0 = <&gmac1_cfg>;
 
 	max-speed = <1000>;
-	tx-fifo-depth = <8192>;
-	rx-fifo-depth = <8192>;
-	snps,tso;
-	snps,force_sf_dma_mode;
 	phy-mode = "rgmii";
 	phy-handle = <&gmac1_phy>;
 	snps,reset-gpios = <&gpio 1 5 GPIO_ACTIVE_LOW>;
@@ -600,10 +592,6 @@
 	pinctrl-0 = <&gmac2_cfg>;
 
 	max-speed = <1000>;
-	tx-fifo-depth = <8192>;
-	rx-fifo-depth = <8192>;
-	snps,tso;
-	snps,force_sf_dma_mode;
 	phy-mode = "rgmii";
 	phy-handle = <&gmac2_phy>;
 	snps,reset-gpios = <&gpio 1 26 GPIO_ACTIVE_LOW>;
@@ -656,10 +644,6 @@
 	pinctrl-0 = <&gmac3_cfg>;
 
 	max-speed = <1000>;
-	tx-fifo-depth = <4096>;
-	rx-fifo-depth = <4096>;
-	snps,tso;
-	snps,force_sf_dma_mode;
 	phy-mode = "rgmii";
 	phy-handle = <&gmac3_phy>;
 	snps,reset-gpios = <&gpio 2 11 GPIO_ACTIVE_LOW>;
@@ -808,14 +792,49 @@
 
 	thermal_gpu {
 		polling-delay = <1000>;
-		polling-delay-passive = <250>;
+		polling-delay-passive = <500>;
 		thermal-sensors = <&thermal 3>;
 
 		trips {
-			thermal_gpu_trip0: thermal_gpu-trip0 {
-				temperature = <40000>;
-				hysteresis = <5000>;
+			gpu_alert0: gpu-alert0 {
+				temperature = <65000>;
+				hysteresis = <2000>;
 				type = "passive";
+			};
+
+			gpu_alert1: gpu-alert1 {
+				temperature = <75000>;
+				hysteresis = <2000>;
+				type = "passive";
+			};
+
+			gpu_alert2: gpu-alert2 {
+				temperature = <85000>;
+				hysteresis = <2000>;
+				type = "passive";
+			};
+
+			gpu_crit: gpu-crit {
+				temperature = <115000>;
+				hysteresis = <2000>;
+				type = "critical";
+			};
+		};
+
+		cooling-maps {
+			map0 {
+				trip = <&gpu_alert0>;
+				cooling-device = <&imggpu 0 1>;
+			};
+
+			map1 {
+				trip = <&gpu_alert1>;
+				cooling-device = <&imggpu 1 2>;
+			};
+
+			map2 {
+				trip = <&gpu_alert2>;
+				cooling-device = <&imggpu 2 3>;
 			};
 		};
 	};

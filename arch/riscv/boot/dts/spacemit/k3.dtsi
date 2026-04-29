@@ -205,6 +205,12 @@
 			no-map;
 		};
 
+		/* reserve 3M for rcpu's dtb space */
+		rcpu_dtb_table: rcpu_dtb_table@100e04000 {
+			reg = <0x1 0xe04000 0x0 0x300000>;
+			no-map;
+		};
+
 		/* reserved 5M for dpu, including mmu table and cmdlist */
 		dpu_resv0: dpu_reserved@101b00000 {
 			compatible = "shared-dma-pool";
@@ -1769,6 +1775,10 @@
 			interrupts = <131 IRQ_TYPE_LEVEL_HIGH>, <276 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq", "eth_wake_irq";
 			mac-address = [00 00 00 00 00 00];
+			tx-fifo-depth = <8192>;
+			rx-fifo-depth = <8192>;
+			snps,tso;
+			snps,force_sf_dma_mode;
 			snps,axi-config = <&gmac_axi_setup>;
 			snps,mtl-rx-config = <&gmac_default_rxq_setup>;
 			snps,mtl-tx-config = <&gmac_default_txq_setup>;
@@ -1790,6 +1800,10 @@
 			interrupts = <133 IRQ_TYPE_LEVEL_HIGH>, <277 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq", "eth_wake_irq";
 			mac-address = [00 00 00 00 00 00];
+			tx-fifo-depth = <8192>;
+			rx-fifo-depth = <8192>;
+			snps,tso;
+			snps,force_sf_dma_mode;
 			snps,axi-config = <&gmac_axi_setup>;
 			snps,mtl-rx-config = <&gmac_default_rxq_setup>;
 			snps,mtl-tx-config = <&gmac_default_txq_setup>;
@@ -1811,6 +1825,10 @@
 			interrupts = <130 IRQ_TYPE_LEVEL_HIGH>, <278 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq", "eth_wake_irq";
 			mac-address = [00 00 00 00 00 00];
+			tx-fifo-depth = <8192>;
+			rx-fifo-depth = <8192>;
+			snps,tso;
+			snps,force_sf_dma_mode;
 			snps,axi-config = <&gmac_axi_setup>;
 			snps,mtl-rx-config = <&gmac_default_rxq_setup>;
 			snps,mtl-tx-config = <&gmac_default_txq_setup>;
@@ -1832,6 +1850,10 @@
 			interrupts = <237 IRQ_TYPE_LEVEL_HIGH>, <236 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "macirq", "eth_wake_irq";
 			mac-address = [00 00 00 00 00 00];
+			tx-fifo-depth = <4096>;
+			rx-fifo-depth = <4096>;
+			snps,tso;
+			snps,force_sf_dma_mode;
 			snps,axi-config = <&gmac_axi_setup>;
 			status = "disabled";
 		};
@@ -2476,7 +2498,8 @@
 			clock-names = "ufs-aclk";
 			resets = <&syscon_apmu RESET_APMU_UFS_ACLK>;
 			reset-names = "ufs-aclk-rst";
-			freq-table-hz = <491000000 491000000>;
+			clock-freq = <491520000>;
+			freq-table-hz = <491520000 491520000>;
 			lanes-per-direction = <2>;
 			ref-clk-freq = <19200000>;
 			status = "disabled";
