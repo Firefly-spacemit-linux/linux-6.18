@@ -1207,7 +1207,7 @@
 			reg =  <0 0 0 0>;
 			mboxes = <&mailbox3 1>, <&mailbox3 2>;
 			mbox-names = "vq0", "vq1";
-			firmware-name = "k3_rcpu0_esos.elf";
+			firmware-name = "rt24_os0_rcpu.elf";
 			memory-region = <&rcpu0_pwr>, <&rcpu0_heap>, <&rcpu0_vdev0vring0>, <&rcpu0_vdev0buffer>,
 					<&rcpu0_vdev0vring1>, <&rcpu0_rsc_table>;
 			status = "disabled";
@@ -1278,10 +1278,10 @@
 			reg =  <0 0 0 0>;
 			mboxes = <&mailbox4 0>, <&mailbox4 1>;
 			mbox-names = "vq0", "vq1";
-			firmware-name = "k3_rcpu1_esos.elf";
+			firmware-name = "rt24_os1_rcpu.elf";
 			memory-region = <&rcpu1_runtime>, <&rcpu1_heap>, <&rcpu1_vdev0vring0>, <&rcpu1_vdev0buffer>,
 					<&rcpu1_vdev0vring1>, <&rcpu1_rsc_table>;
-			status = "disabled";
+			status = "okay";
 		};
 
 		mpxy_mbox: mpxy_mbox@0 {
@@ -1492,7 +1492,10 @@
 		usb2_host: usb2@c0a00000 {
 			compatible = "spacemit,k1-dwc3";
 			reg = <0x0 0xc0a00000 0x0 0x10000>;
-			interrupts = <105 IRQ_TYPE_LEVEL_HIGH>;
+			spacemit,syscon-apmu = <&syscon_apmu 0x7c>;
+			interrupts = <105 IRQ_TYPE_LEVEL_HIGH>,
+				     <155 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dwc3", "wakeup";
 			interrupt-parent = <&saplic>;
 			clocks = <&syscon_apmu CLK_APMU_USB2_BUS>;
 			resets = <&syscon_apmu RESET_APMU_USB2>;
@@ -1530,7 +1533,10 @@
 		usb3_porta: usb3@cad00000 {
 			compatible = "spacemit,k1-dwc3";
 			reg = <0x0 0xcad00000 0x0 0x10000>;
-			interrupts = <118 IRQ_TYPE_LEVEL_HIGH>;
+			spacemit,syscon-apmu = <&syscon_apmu 0x3c4>;
+			interrupts = <118 IRQ_TYPE_LEVEL_HIGH>,
+				     <156 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dwc3", "wakeup";
 			interrupt-parent = <&saplic>;
 			clocks = <&syscon_apmu CLK_APMU_USB3_PORTA_BUS>;
 			resets = <&syscon_apmu RESET_APMU_USB3_PORTA>;
@@ -1566,7 +1572,10 @@
 		usb3_portb: usb3@81400000 {
 			compatible = "spacemit,k1-dwc3";
 			reg = <0x0 0x81400000 0x0 0x10000>;
-			interrupts = <125 IRQ_TYPE_LEVEL_HIGH>;
+			spacemit,syscon-apmu = <&syscon_apmu 0x3c8>;
+			interrupts = <125 IRQ_TYPE_LEVEL_HIGH>,
+				     <157 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dwc3", "wakeup";
 			interrupt-parent = <&saplic>;
 			clocks = <&syscon_apmu CLK_APMU_USB3_PORTB_BUS>;
 			resets = <&syscon_apmu RESET_APMU_USB3_PORTB>;
@@ -1603,7 +1612,10 @@
 		usb3_portc: usb3@81700000 {
 			compatible = "spacemit,k1-dwc3";
 			reg = <0x0 0x81700000 0x0 0x10000>;
-			interrupts = <148 IRQ_TYPE_LEVEL_HIGH>;
+			spacemit,syscon-apmu = <&syscon_apmu 0x3cc>;
+			interrupts = <148 IRQ_TYPE_LEVEL_HIGH>,
+				     <158 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dwc3", "wakeup";
 			interrupt-parent = <&saplic>;
 			clocks = <&syscon_apmu CLK_APMU_USB3_PORTC_BUS>;
 			resets = <&syscon_apmu RESET_APMU_USB3_PORTC>;
@@ -1640,7 +1652,10 @@
 		usb3_portd: usb3@81a00000 {
 			compatible = "spacemit,k1-dwc3";
 			reg = <0x0 0x81a00000 0x0 0x10000>;
-			interrupts = <149 IRQ_TYPE_LEVEL_HIGH>;
+			spacemit,syscon-apmu = <&syscon_apmu 0x3d0>;
+			interrupts = <149 IRQ_TYPE_LEVEL_HIGH>,
+				     <159 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dwc3", "wakeup";
 			interrupt-parent = <&saplic>;
 			clocks = <&syscon_apmu CLK_APMU_USB3_PORTD_BUS>;
 			resets = <&syscon_apmu RESET_APMU_USB3_PORTD>;
@@ -2273,8 +2288,8 @@
 				<0x43000000 0x18 0x00000000 0x18 0x00000000 0x1 0x00000000>;
 
 			interrupt-parent = <&saplic>;
-			interrupts = <141 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "pcie_irq";
+			interrupts = <141 IRQ_TYPE_LEVEL_HIGH>, <219 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq", "wakeup";
 				clocks = <&syscon_apmu CLK_APMU_PCIE_PORTA_BUS>,
 					<&syscon_apmu CLK_APMU_PCIE_PORTA_MSTR>,
 					<&syscon_apmu CLK_APMU_PCIE_PORTA_SLV>;
@@ -2312,8 +2327,8 @@
 				<0x43000000 0x16 0x00000000 0x16 0x00000000 0x1 0x00000000>;
 
 			interrupt-parent = <&saplic>;
-			interrupts = <142 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "pcie_irq";
+			interrupts = <142 IRQ_TYPE_LEVEL_HIGH>, <220 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq", "wakeup";
 
 			clocks = <&syscon_apmu CLK_APMU_PCIE_PORTB_BUS>,
 				<&syscon_apmu CLK_APMU_PCIE_PORTB_MSTR>,
@@ -2354,8 +2369,8 @@
 				<0x43000000 0x15 0x00000000 0x15 0x00000000 0x1 0x00000000>;
 
 			interrupt-parent = <&saplic>;
-			interrupts = <143 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "pcie_irq";
+			interrupts = <143 IRQ_TYPE_LEVEL_HIGH>, <221 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq", "wakeup";
 
 			clocks = <&syscon_apmu CLK_APMU_PCIE_PORTC_BUS>,
 				<&syscon_apmu CLK_APMU_PCIE_PORTC_MSTR>,
@@ -2396,8 +2411,8 @@
 				<0x43000000 0x14 0x00000000 0x14 0x00000000 0x1 0x00000000>;
 
 			interrupt-parent = <&saplic>;
-			interrupts = <145 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "pcie_irq";
+			interrupts = <145 IRQ_TYPE_LEVEL_HIGH>, <222 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq", "wakeup";
 
 			clocks = <&syscon_apmu CLK_APMU_PCIE_PORTD_BUS>,
 				<&syscon_apmu CLK_APMU_PCIE_PORTD_MSTR>,
@@ -2435,8 +2450,8 @@
 				<0x43000000 0x13 0x00000000 0x13 0x00000000 0x1 0x00000000>;
 
 			interrupt-parent = <&saplic>;
-			interrupts = <146 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "pcie_irq";
+			interrupts = <146 IRQ_TYPE_LEVEL_HIGH>, <223 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq", "wakeup";
 
 			clocks = <&syscon_apmu CLK_APMU_PCIE_PORTE_BUS>,
 				<&syscon_apmu CLK_APMU_PCIE_PORTE_MSTR>,
@@ -2490,7 +2505,7 @@
 		ufshc: ufshc@0xc0e00000 {
 			#address-cells = <2>;
 			#size-cells = <2>;
-			compatible = "spacemit,k3-ufshcd", "jedec,ufs-2.1";
+			compatible = "spacemit,k3-ufshcd";
 			reg = <0x0 0xc0e00000 0x0 0x40000>;
 			interrupt-parent = <&saplic>;
 			interrupts = <135 0x4>;
@@ -2511,6 +2526,8 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges = <0x0 0x0 0x84000000 0x1000>;
+			pr-mem-base0 = <0x84000000>;
+			pr-mem-base1 = <0xcac8c000>;
 			clocks = <&syscon_apmu CLK_APMU_ESPI_SCLK_SRC>,
 				 <&syscon_apmu CLK_APMU_ESPI_SCLK>,
 				 <&syscon_apmu CLK_APMU_ESPI_MCLK>;
@@ -2519,6 +2536,17 @@
 				 <&syscon_apmu RESET_APMU_ESPI_SCLK>;
 			assigned-clocks = <&syscon_apmu CLK_APMU_ESPI_SCLK>;
 			assigned-clock-parents = <&syscon_apmu CLK_APMU_ESPI_SCLK_SRC>;
+			operating-frequency = <20>;
+			io-mode = "single";
+			alert-mode = "io1";
+			alert-type = "open-drain";
+			watchdog-timeout = <0xffff>;
+			crc-enable;
+			auto-gating-enable;
+			peripheral-channel-enable;
+			vwire-channel-enable;
+			oob-channel-enable;
+			flash-channel-enable;
 			status = "disabled";
 
 			ec: ec@0 {

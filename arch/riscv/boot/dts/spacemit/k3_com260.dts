@@ -85,6 +85,16 @@
 		radio-type = "bluetooth";
 		shutdown-gpios = <&gpio 1 25 GPIO_ACTIVE_LOW>;
 	};
+
+	hub_reset: hub-reset {
+		compatible = "regulator-fixed";
+		regulator-name = "hub-reset";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		regulator-boot-on;
+		gpio = <&gpio 1 21 0>;
+	};
 };
 
 &resmem {
@@ -248,6 +258,12 @@
 		};
 	};
 
+	cam0_2_cfg: cam0-2-cfg {
+               cam1-0-pins {
+                        power-source = <1800>;
+                };
+        };
+
 	cam_mux_cfg: cam-mux-cfg {
 		cam-mux-pins {
 			pinmux = <K3_PADCONF(103, 0)>;
@@ -255,6 +271,16 @@
 			bias-pull-up;
 			drive-strength = <25>;
 			power-source = <1800>;
+		};
+	};
+
+	mmc1_cd_cfg: mmc1-cd-cfg {
+		mmc1-cd-pins {
+			pinmux = <K3_PADCONF(4, 0)>;	/* cd gpio */
+
+			bias-pull-up = <1>;
+			drive-strength = <8>;
+			power-source = <3300>;
 		};
 	};
 };
@@ -282,8 +308,8 @@
 
 &sdcard {
 	pinctrl-names = "default","uhs";
-	pinctrl-0 = <&mmc1_cfg>;
-	pinctrl-1 = <&mmc1_uhs_cfg>;
+	pinctrl-0 = <&mmc1_cfg &mmc1_cd_cfg>;
+	pinctrl-1 = <&mmc1_uhs_cfg &mmc1_cd_cfg>;
 	bus-width = <4>;
 	wp-inverted;
 	cd-gpios = <&gpio 0 4 GPIO_ACTIVE_HIGH>;
@@ -325,6 +351,7 @@
 	usb-role-switch;
 	role-switch-default-mode = "peripheral";
 	monitor-vbus;
+	reset-on-resume;
 	status = "okay";
 
 	ports {
@@ -351,14 +378,15 @@
 	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
+	reset-on-resume;
+	/* wakeup-source; */
 
 	/* VL817 USB2.0 hub (4 ports) */
 	hub_2_0: hub@1 {
 		compatible = "usb2109,2817";
 		reg = <1>;
 		peer-hub = <&hub_3_0>;
-		/* GPIO53(MIPI_CSI3_PWDN) reserved for HUB 3V3 RST,
-		 * now reset will be done by HW */
+		vdd-supply = <&hub_reset>;
 	};
 
 	/* VL817 USB3.0 hub (4 ports) */
@@ -366,8 +394,6 @@
 		compatible = "usb2109,817";
 		reg = <2>;
 		peer-hub = <&hub_2_0>;
-		/* GPIO53(MIPI_CSI3_PWDN) reserved for HUB 3V3 RST,
-		 * now reset will be done by HW */
 	};
 };
 
@@ -959,7 +985,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&fusb301_cfg>;
 		irq-gpios = <&gpio 1 26 GPIO_ACTIVE_LOW>;
-		wakeup-source;
+		suspend-vbus-off;
 		status = "okay";
 
 		typec_0: connector@0 {
@@ -1041,7 +1067,22 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&cam_mux_cfg>;
 		i2c-mux-gpios = <&gpio 3 7 GPIO_ACTIVE_HIGH>;
-		pwdn-gpios = <&gpio 1 13 GPIO_ACTIVE_HIGH>;
+		pwdn-gpios = <&gpio 1 12 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
+	ov5640@3c {
+		compatible = "spacemit,ov5640-max96724-max9295";
+		reg = <0x3c>;
+		csi-id = <0>;
+		vdd-supply = <&aldo3>;
+		clock-names = "xclk";
+		clocks = <&syscon_apmu CLK_APMU_ISIM_VCLK0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam0_2_cfg>;
+		pwdn-gpios = <&gpio 1 12 GPIO_ACTIVE_HIGH>;
+		deserializer-addr = <0x27>;
+		serializer-base-addr = <0x41>;
 		status = "okay";
 	};
 
@@ -1053,7 +1094,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&cam_mux_cfg>;
 		i2c-mux-gpios = <&gpio 3 7 GPIO_ACTIVE_HIGH>;
-		pwdn-gpios = <&gpio 1 13 GPIO_ACTIVE_HIGH>;
+		pwdn-gpios = <&gpio 1 12 GPIO_ACTIVE_HIGH>;
 		status = "disabled";
 	};
 };
@@ -1276,25 +1317,6 @@
 			dldo7: dldo7 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
-				regulator-always-on;
-				regulator-boot-on;
-			};
-		};
-	};
-
-	mpq8655: mpq8655@30 {
-		compatible = "spacemit,mpq8655";
-		reg = <0x30>;
-
-		vcc-supply = <&p5v>;
-
-		regulators {
-			compatible = "spacemit,regulator,mpq8655";
-
-			edcdc1: edcdc1 {
-				regulator-min-microvolt = <600000>;
-				regulator-max-microvolt = <1000000>;
-				regulator-ramp-delay = <10>;
 				regulator-always-on;
 				regulator-boot-on;
 			};

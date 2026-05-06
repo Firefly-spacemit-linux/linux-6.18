@@ -218,18 +218,8 @@
 		};
 	};
 
-	mmc1-cfg {
-		mmc1-2-pins {
-			pinmux = <K3_PADCONF(86, 0)>;	/* cd gpio */
-
-			bias-pull-up = <1>;
-			drive-strength = <8>;
-			power-source = <3300>;
-		};
-	};
-
-	mmc1-uhs-cfg {
-		mmc1-2-pins {
+	mmc1_cd_cfg: mmc1-cd-cfg {
+		mmc1-cd-pins {
 			pinmux = <K3_PADCONF(86, 0)>;	/* cd gpio */
 
 			bias-pull-up = <1>;
@@ -251,8 +241,8 @@
 
 &sdcard {
 	pinctrl-names = "default","uhs","debug";
-	pinctrl-0 = <&mmc1_cfg>;
-	pinctrl-1 = <&mmc1_uhs_cfg>;
+	pinctrl-0 = <&mmc1_cfg &mmc1_cd_cfg>;
+	pinctrl-1 = <&mmc1_uhs_cfg &mmc1_cd_cfg>;
 	pinctrl-2 = <&mmc1_debug_cfg>;
 	bus-width = <4>;
 	wp-inverted;
@@ -1047,25 +1037,6 @@
 			dldo7: dldo7 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
-				regulator-always-on;
-				regulator-boot-on;
-			};
-		};
-	};
-
-	mpq8655: mpq8655@30 {
-		compatible = "spacemit,mpq8655";
-		reg = <0x30>;
-
-		vcc-supply = <&p12v>;
-
-		regulators {
-			compatible = "spacemit,regulator,mpq8655";
-
-			edcdc1: edcdc1 {
-				regulator-min-microvolt = <534000>;
-				regulator-max-microvolt = <1000000>;
-				regulator-ramp-delay = <10>;
 				regulator-always-on;
 				regulator-boot-on;
 			};
