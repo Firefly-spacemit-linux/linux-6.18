@@ -90,15 +90,15 @@
 	};
 
 	edcdc2: edcdc2 {
-		regulator-min-microvolt = <800000>;
-		regulator-max-microvolt = <800000>;
+		regulator-min-microvolt = <534000>;
+		regulator-max-microvolt = <1005000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
 
 	edcdc1: edcdc1 {
 		regulator-min-microvolt = <534000>;
-		regulator-max-microvolt = <1000000>;
+		regulator-max-microvolt = <1005000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
