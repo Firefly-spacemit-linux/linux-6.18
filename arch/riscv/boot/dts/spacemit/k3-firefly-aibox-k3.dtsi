@@ -77,6 +77,7 @@
                 gpio = <&gpio K3_GPIO(60) GPIO_ACTIVE_HIGH>;
                 pinctrl-0 = <&usb20_otg_en_cfg>;
                 pinctrl-names = "default";
+                vin-supply = <&vcc5v0_sys>;
                 status = "okay";
         };
 #endif
@@ -355,10 +356,8 @@
 	usbc0: fusb302@22 {
 		compatible = "fcs,fusb302";
 		reg = <0x22>;
-		//interrupt-parent = <&gpio>;
-		//interrupts = <K3_GPIO(58) IRQ_TYPE_LEVEL_LOW>;
-		interrupt-parent = <&saplic>;
-		interrupts = <253 IRQ_TYPE_LEVEL_LOW>;
+		fcs,int_n-gpios = <&gpio K3_GPIO(58) GPIO_ACTIVE_LOW>;
+		linux,host-role-before-vbus;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usbc0_int_cfg>;
 		vbus-supply = <&vcc5v0_usb20_typec>;
@@ -453,6 +452,7 @@
 &usb3_porta {
 	dr_mode = "otg";
 	usb-role-switch;
+	spacemit,synchronous-role-switch;
 	role-switch-default-mode = "peripheral";
 	monitor-vbus;
 	status = "okay";

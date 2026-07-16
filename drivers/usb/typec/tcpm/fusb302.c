@@ -42,6 +42,7 @@
  * longer than PD_T_PD_DEBPUNCE (10-20ms).
  */
 #define T_BC_LVL_DEBOUNCE_DELAY_MS 30
+#define FUSB302_MAX_IRQ_DRAIN 10
 
 enum toggling_mode {
 	TOGGLING_MODE_OFF,
@@ -83,6 +84,7 @@ struct fusb302_chip {
 	struct work_struct irq_work;
 	bool irq_suspended;
 	bool irq_while_suspended;
+	bool irq_ready;
 	struct gpio_desc *gpio_int_n;
 	int gpio_int_n_irq;
 	struct extcon_dev *extcon;
@@ -356,13 +358,26 @@ static int fusb302_enable_tx_auto_retries(struct fusb302_chip *chip, u8 retry_co
 	return ret;
 }
 
-/*
- * initialize interrupt on the chip
- * - unmasked interrupt: VBUS_OK
- */
+static int fusb302_set_interrupt_enabled(struct fusb302_chip *chip,
+					 bool enabled)
+{
+	if (enabled)
+		return fusb302_i2c_clear_bits(chip, FUSB_REG_CONTROL0,
+					       FUSB_REG_CONTROL0_INT_MASK);
+
+	return fusb302_i2c_set_bits(chip, FUSB_REG_CONTROL0,
+				    FUSB_REG_CONTROL0_INT_MASK);
+}
+
+/* Initialize the interrupt sources, leaving VBUS_OK unmasked. */
 static int fusb302_init_interrupt(struct fusb302_chip *chip)
 {
 	int ret = 0;
+
+	/* INT_N must remain deasserted until the host IRQ is ready. */
+	ret = fusb302_set_interrupt_enabled(chip, false);
+	if (ret < 0)
+		return ret;
 
 	ret = fusb302_i2c_write(chip, FUSB_REG_MASK,
 				0xFF & ~FUSB_REG_MASK_VBUSOK);
@@ -374,10 +389,9 @@ static int fusb302_init_interrupt(struct fusb302_chip *chip)
 	ret = fusb302_i2c_write(chip, FUSB_REG_MASKB, 0xFF);
 	if (ret < 0)
 		return ret;
-	ret = fusb302_i2c_clear_bits(chip, FUSB_REG_CONTROL0,
-				     FUSB_REG_CONTROL0_INT_MASK);
-	if (ret < 0)
-		return ret;
+
+	if (chip->irq_ready)
+		ret = fusb302_set_interrupt_enabled(chip, true);
 
 	return ret;
 }
@@ -1480,28 +1494,29 @@ static int fusb302_pd_read_message(struct fusb302_chip *chip,
 	return ret;
 }
 
+static int fusb302_process_interrupt(struct fusb302_chip *chip);
+static void fusb302_drain_interrupts(struct fusb302_chip *chip);
+
 static irqreturn_t fusb302_irq_intn(int irq, void *dev_id)
 {
 	struct fusb302_chip *chip = dev_id;
 	unsigned long flags;
-
-	/* Disable our level triggered IRQ until our irq_work has cleared it */
-	disable_irq_nosync(chip->gpio_int_n_irq);
+	bool suspended;
 
 	spin_lock_irqsave(&chip->irq_lock, flags);
-	if (chip->irq_suspended)
+	suspended = chip->irq_suspended;
+	if (suspended)
 		chip->irq_while_suspended = true;
-	else
-		schedule_work(&chip->irq_work);
 	spin_unlock_irqrestore(&chip->irq_lock, flags);
+
+	if (!suspended)
+		fusb302_drain_interrupts(chip);
 
 	return IRQ_HANDLED;
 }
 
-static void fusb302_irq_work(struct work_struct *work)
+static int fusb302_process_interrupt(struct fusb302_chip *chip)
 {
-	struct fusb302_chip *chip = container_of(work, struct fusb302_chip,
-						 irq_work);
 	int ret = 0;
 	u8 interrupt;
 	u8 interrupta;
@@ -1630,7 +1645,49 @@ static void fusb302_irq_work(struct work_struct *work)
 	}
 done:
 	mutex_unlock(&chip->lock);
-	enable_irq(chip->gpio_int_n_irq);
+
+	return ret;
+}
+
+static void fusb302_drain_interrupts(struct fusb302_chip *chip)
+{
+	int int_n;
+	int ret;
+	int i;
+
+	for (i = 0; i < FUSB302_MAX_IRQ_DRAIN; i++) {
+		ret = fusb302_process_interrupt(chip);
+		if (ret < 0) {
+			dev_err_ratelimited(chip->dev,
+					    "failed to process interrupt: %d\n", ret);
+			return;
+		}
+
+		if (!chip->gpio_int_n)
+			return;
+
+		int_n = gpiod_get_raw_value_cansleep(chip->gpio_int_n);
+		if (int_n < 0) {
+			dev_err_ratelimited(chip->dev,
+					    "failed to read GPIO Int_N: %d\n", int_n);
+			return;
+		}
+
+		if (int_n)
+			return;
+	}
+
+	dev_warn_ratelimited(chip->dev,
+			     "Int_N remained asserted after %d drain attempts\n",
+			     FUSB302_MAX_IRQ_DRAIN);
+}
+
+static void fusb302_irq_work(struct work_struct *work)
+{
+	struct fusb302_chip *chip = container_of(work, struct fusb302_chip,
+						 irq_work);
+
+	fusb302_drain_interrupts(chip);
 }
 
 static int init_gpio(struct fusb302_chip *chip)
@@ -1690,6 +1747,7 @@ static int fusb302_probe(struct i2c_client *client)
 	struct fusb302_chip *chip;
 	struct i2c_adapter *adapter = client->adapter;
 	struct device *dev = &client->dev;
+	unsigned long irq_flags = IRQF_ONESHOT;
 	const char *name;
 	int ret = 0;
 
@@ -1735,10 +1793,12 @@ static int fusb302_probe(struct i2c_client *client)
 
 	if (client->irq) {
 		chip->gpio_int_n_irq = client->irq;
+		irq_flags |= IRQF_TRIGGER_LOW;
 	} else {
 		ret = init_gpio(chip);
 		if (ret < 0)
 			goto destroy_workqueue;
+		irq_flags |= IRQF_TRIGGER_FALLING;
 	}
 
 	chip->tcpc_dev.fwnode = fusb302_fwnode_get(dev);
@@ -1755,17 +1815,27 @@ static int fusb302_probe(struct i2c_client *client)
 		goto destroy_workqueue;
 	}
 
-	ret = request_irq(chip->gpio_int_n_irq, fusb302_irq_intn,
-			  IRQF_ONESHOT | IRQF_TRIGGER_LOW,
-			  "fsc_interrupt_int_n", chip);
+	ret = devm_request_threaded_irq(dev, chip->gpio_int_n_irq, NULL,
+					fusb302_irq_intn, irq_flags,
+					"fsc_interrupt_int_n", chip);
 	if (ret < 0) {
-		dev_err(dev, "cannot request IRQ for GPIO Int_N, ret=%d", ret);
+		dev_err(dev, "cannot request IRQ for GPIO Int_N, ret=%d\n", ret);
 		goto tcpm_unregister_port;
 	}
+
+	/* Enable INT_N only after the falling-edge IRQ is registered. */
+	chip->irq_ready = true;
+	ret = fusb302_set_interrupt_enabled(chip, true);
+	if (ret < 0) {
+		chip->irq_ready = false;
+		dev_err(dev, "cannot enable FUSB302 interrupts, ret=%d\n", ret);
+		goto tcpm_unregister_port;
+	}
+
 	enable_irq_wake(chip->gpio_int_n_irq);
 	i2c_set_clientdata(client, chip);
 
-	return ret;
+	return 0;
 
 tcpm_unregister_port:
 	tcpm_unregister_port(chip->tcpm_port);
@@ -1782,7 +1852,8 @@ static void fusb302_remove(struct i2c_client *client)
 	struct fusb302_chip *chip = i2c_get_clientdata(client);
 
 	disable_irq_wake(chip->gpio_int_n_irq);
-	free_irq(chip->gpio_int_n_irq, chip);
+	disable_irq(chip->gpio_int_n_irq);
+	chip->irq_ready = false;
 	cancel_work_sync(&chip->irq_work);
 	cancel_delayed_work_sync(&chip->bc_lvl_handler);
 	tcpm_unregister_port(chip->tcpm_port);

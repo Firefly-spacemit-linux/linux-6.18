@@ -392,6 +392,7 @@ struct tcpm_port {
 	bool vbus_never_low;
 	bool vbus_source;
 	bool vbus_charge;
+	bool host_role_before_vbus;
 
 	/* Set to true when Discover_Identity Command is expected to be sent in Ready states. */
 	bool send_discover;
@@ -4426,14 +4427,25 @@ static int tcpm_src_attach(struct tcpm_port *port)
 			return ret;
 	}
 
-	ret = tcpm_set_vbus(port, true);
-	if (ret < 0)
-		goto out_disable_vconn;
+	if (port->host_role_before_vbus) {
+		ret = tcpm_set_roles(port, true, TYPEC_STATE_USB, TYPEC_SOURCE,
+				     tcpm_data_role_for_source(port));
+		if (ret < 0)
+			goto out_disable_vconn;
 
-	ret = tcpm_set_roles(port, true, TYPEC_STATE_USB, TYPEC_SOURCE,
-			     tcpm_data_role_for_source(port));
-	if (ret < 0)
-		goto out_disable_vbus;
+		ret = tcpm_set_vbus(port, true);
+		if (ret < 0)
+			goto out_disable_mux;
+	} else {
+		ret = tcpm_set_vbus(port, true);
+		if (ret < 0)
+			goto out_disable_vconn;
+
+		ret = tcpm_set_roles(port, true, TYPEC_STATE_USB, TYPEC_SOURCE,
+				     tcpm_data_role_for_source(port));
+		if (ret < 0)
+			goto out_disable_vbus;
+	}
 
 	if (port->pd_supported) {
 		ret = port->tcpc->set_pd_rx(port->tcpc, true);
@@ -7819,6 +7831,8 @@ struct tcpm_port *tcpm_register_port(struct device *dev, struct tcpc_dev *tcpc)
 
 	port->dev = dev;
 	port->tcpc = tcpc;
+	port->host_role_before_vbus =
+		device_property_read_bool(dev, "linux,host-role-before-vbus");
 
 	mutex_init(&port->lock);
 	mutex_init(&port->swap_lock);

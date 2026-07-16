@@ -71,6 +71,13 @@ properties:
   vbus-supply:
     description: A phandle to the regulator supplying the VBUS voltage.
 
+  spacemit,synchronous-role-switch:
+    type: boolean
+    description:
+      Wait for the DWC3 role-switch work to finish before returning from the
+      USB role-switch callback. This allows a Type-C controller to defer VBUS
+      enable until the host controller is fully initialized.
+
 required:
   - compatible
   - reg

@@ -19,6 +19,16 @@ properties:
   interrupts:
     maxItems: 1
 
+  fcs,int_n-gpios:
+    maxItems: 1
+    description: Active-low open-drain INT_N GPIO.
+
+  linux,host-role-before-vbus:
+    type: boolean
+    description:
+      Initialize the USB host role before enabling source VBUS. This is used
+      with controllers whose role-switch operation completes asynchronously.
+
   vbus-supply:
     description: VBUS power supply
 
@@ -30,9 +40,14 @@ properties:
 required:
   - compatible
   - reg
-  - interrupts
   - vbus-supply
   - connector
+
+oneOf:
+  - required:
+      - interrupts
+  - required:
+      - fcs,int_n-gpios
 
 additionalProperties: false
 

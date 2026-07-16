@@ -475,6 +475,11 @@ static int dwc3_usb_role_switch_set(struct usb_role_switch *sw,
 
 	dwc3_pre_set_role(dwc, role);
 	dwc3_set_mode(dwc, mode);
+	if (role == USB_ROLE_HOST &&
+	    device_property_read_bool(dwc->dev,
+				      "spacemit,synchronous-role-switch"))
+		flush_work(&dwc->drd_work);
+
 	return 0;
 }
 
