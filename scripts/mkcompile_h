@@ -42,7 +42,7 @@ fi
 
 LINUX_BRANCH=$(git -C "$LINUX_GIT_TREE" rev-parse --abbrev-ref HEAD)
 LINUX_COMMIT=$(git -C "$LINUX_GIT_TREE" rev-parse --short=12 HEAD)
-LINUX_COMPILE_TIME=$(date +%y%m%d%H%M)
+LINUX_COMPILE_TIME=$(date +%y%m%d)
 XML_PATH=
 XML_NAME=
 if test -n "$SDK_ROOT"; then
