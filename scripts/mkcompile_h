@@ -19,11 +19,38 @@ fi
 LD_VERSION=$(LC_ALL=C $LD -v | head -n1 |
 		sed -e 's/(compatible with [^)]*)//' -e 's/[[:space:]]*$//')
 
-LINUX_BRANCH=$(git -C /build/.repo/projects/bsp-src/linux-6.18.git/ rev-parse --abbrev-ref HEAD)
-LINUX_COMMIT=$(git -C /build/.repo/projects/bsp-src/linux-6.18.git/ rev-parse --short=12 HEAD)
+LINUX_SOURCE=$(CDPATH= cd "$(dirname "$0")/.." && pwd)
+LINUX_GIT_TREE=$LINUX_SOURCE
+unset GIT_DIR GIT_WORK_TREE
+
+SDK_ROOT=
+SEARCH_PATH=$LINUX_SOURCE
+while :; do
+	if test -f "$SEARCH_PATH/.repo/manifest.xml"; then
+		SDK_ROOT=$SEARCH_PATH
+		break
+	fi
+	test "$SEARCH_PATH" = / && break
+	SEARCH_PATH=$(dirname "$SEARCH_PATH")
+done
+
+if ! git -C "$LINUX_GIT_TREE" rev-parse --git-dir >/dev/null 2>&1 &&
+		test -n "$SDK_ROOT"; then
+	REPO_GIT_TREE=$SDK_ROOT/.repo/projects/bsp-src/linux-6.18.git
+	test ! -d "$REPO_GIT_TREE" || LINUX_GIT_TREE=$REPO_GIT_TREE
+fi
+
+LINUX_BRANCH=$(git -C "$LINUX_GIT_TREE" rev-parse --abbrev-ref HEAD)
+LINUX_COMMIT=$(git -C "$LINUX_GIT_TREE" rev-parse --short=12 HEAD)
 LINUX_COMPILE_TIME=$(date +%y%m%d%H%M)
-XML_PATH=$(readlink -f /build/.repo/manifest.xml)
-XML_NAME=${XML_PATH##*/}
+XML_PATH=
+XML_NAME=
+if test -n "$SDK_ROOT"; then
+	XML_PATH=$(readlink -f "$SDK_ROOT/.repo/manifest.xml")
+	XML_NAME=$(sed -n 's/.*<include[^>]*name="\([^"]*\)".*/\1/p' \
+		"$XML_PATH" | head -n1)
+	test -n "$XML_NAME" || XML_NAME=${XML_PATH##*/}
+fi
 
 cat <<EOF
 #define UTS_MACHINE		"${UTS_MACHINE}"
