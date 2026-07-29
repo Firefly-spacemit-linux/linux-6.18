@@ -12,17 +12,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -59,17 +66,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -106,17 +120,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -153,17 +174,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -200,17 +228,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -247,17 +282,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -294,17 +336,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -341,17 +390,24 @@
 				compatible = "riscv";
 				riscv,isa = "rv64imafdcvh";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v", "h",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v", "h",
+						       "sha", "shcounterenw", "shgatpa", "shtvala",
+						       "shvsatpa", "shvstvala", "shvstvecd", "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
@@ -389,26 +445,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache3>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -437,26 +499,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache3>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -485,26 +553,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache3>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -533,26 +607,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache3>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -581,26 +661,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache4>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -629,26 +715,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache4>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -677,26 +769,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache4>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";
@@ -725,26 +823,32 @@
 				cpu-ai = "true";
 				riscv,isa = "rv64imafdcv";
 				riscv,isa-base = "rv64i";
-				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "v",
-						"smaia", "smstateen", "ssaia", "sscofpmf",
-						"sstc", "svinval", "svnapot", "svpbmt",
-						"zawrs", "zba", "zbb", "zbc", "zbs", "zcb", "zca",
-						"zcmop", "zfa", "zfh", "zfhmin", "zkt", "zicbom",
-						"zicbop", "zicboz", "zicntr", "zicond", "zicsr",
-						"zifencei", "zihintpause", "zihintntl", "zihpm",
-						"zimop", "zvbb", "zvbc", "zvfh", "zvfhmin", "zvkb",
-						"zvkg", "zvkn", "zvknc", "zvkned", "zvkng", "zvknha",
-						"zvknhb", "zvks", "zvksc", "zvksed", "zvksh", "zvksg",
-						"zvkt", "zcd", "sdtrig";
+				riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "b", "v",
+						       "smaia",
+						       "smstateen", "ssaia", "ssccptr", "sscofpmf",
+						       "sscounterenw", "ssnpm", "ssstateen", "sstc",
+						       "sstvala", "sstvecd", "ssu64xl", "svade",
+						       "svinval", "svnapot", "svpbmt", "za64rs",
+						       "zawrs", "zba", "zbb", "zbc", "zbs", "zca",
+						       "zcb", "zcd", "zcmop", "zfa", "zfbfmin",
+						       "zfh", "zfhmin", "zicbom", "zicbop", "zicboz",
+						       "ziccamoa", "ziccif", "zicclsm", "zicntr",
+						       "zicond", "zicsr", "zifencei", "zihintntl",
+						       "zihintpause", "zihpm", "zimop", "zkt", "zvbb",
+						       "zvbc", "zvfbfmin", "zvfbfwma", "zvfh",
+						       "zvfhmin", "zvkb", "zvkg", "zvkn", "zvknc",
+						       "zvkned", "zvkng", "zvknha", "zvknhb", "zvks",
+						       "zvksc", "zvksed", "zvksg", "zvksh", "zvkt",
+						       "sdtrig";
 				riscv,cbom-block-size = <64>;
 				riscv,cboz-block-size = <64>;
 				riscv,cbop-block-size = <64>;
 				i-cache-block-size = <64>;
-				i-cache-size = <65536>;
-				i-cache-sets = <256>;
+				i-cache-size = <32768>;
+				i-cache-sets = <128>;
 				d-cache-block-size = <64>;
-				d-cache-size = <65536>;
-				d-cache-sets = <256>;
+				d-cache-size = <32768>;
+				d-cache-sets = <128>;
 				next-level-cache = <&l2_cache4>;
 				cpu-idle-states = <&CPU_NONRET>, <&CLUSTER_NONRET>;
 				mmu-type = "riscv,sv39";

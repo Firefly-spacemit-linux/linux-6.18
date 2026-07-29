@@ -57,6 +57,8 @@ struct symbol_conf {
 			*source_prefix,
 			*field_sep,
 			*graph_function;
+	const char	*firmware_name;
+	const char	*firmware_base;
 	const char	*default_guest_vmlinux_name,
 			*default_guest_kallsyms,
 			*default_guest_modules;

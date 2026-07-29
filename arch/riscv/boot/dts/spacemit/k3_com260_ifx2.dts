@@ -1,0 +1,234 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#include "k3_com260.dtsi"
+#include "k3-camera.dtsi"
+
+/ {
+	model = "SpacemiT K3 Com260 IFX2";
+	compatible = "spacemit,k3-com260-ifx";
+
+	rfkill-pcie-wlan {
+		compatible = "rfkill-gpio";
+		label = "rfkill-pcie-wlan";
+		pinctrl-names = "default";
+		pinctrl-0 = <&m2_wdis1_cfg>;
+		radio-type = "wlan";
+		shutdown-gpios = <&gpio 2 9 GPIO_ACTIVE_LOW>;
+	};
+
+	hub_reset: hub-reset {
+		compatible = "regulator-fixed";
+		regulator-name = "hub-reset";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		regulator-boot-on;
+		gpio = <&gpio 1 21 0>;
+	};
+};
+
+&pinctrl {
+	can3-1-cfg {
+		can3-0-pins {
+			power-source = <1800>;
+		};
+	};
+
+	can4-1-cfg {
+		can4-0-pins {
+			power-source = <1800>;
+		};
+	};
+
+	rcan2-0-cfg {
+		rcan2-0-pins {
+			power-source = <1800>;
+		};
+	};
+};
+
+&eth1 {
+	phy-handle = <&gmac1_phy>;
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		gmac1_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id001c.c916",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				led@1 {
+					reg = <1>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+				};
+
+				led@2 {
+					reg = <2>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+				};
+			};
+		};
+	};
+};
+
+&usb3_porta_u3phy {
+	lfps-iset-lvl = <3>;
+};
+
+&usb3_porta {
+	reset-on-resume;
+};
+
+&usb3_portb {
+	reset-on-resume;
+	/* wakeup-source; */
+
+	/* VL817 USB2.0 hub (4 ports) */
+	hub_2_0: hub@1 {
+		compatible = "usb2109,2817";
+		reg = <1>;
+		peer-hub = <&hub_3_0>;
+		vdd-supply = <&hub_reset>;
+	};
+
+	/* VL817 USB3.0 hub (4 ports) */
+	hub_3_0: hub@2 {
+		compatible = "usb2109,817";
+		reg = <2>;
+		peer-hub = <&hub_2_0>;
+	};
+};
+
+&i2c0 {
+	tcpc@25 {
+		suspend-vbus-off;
+	};
+};
+
+/* ifx2: cam1 uses csi-1 */
+&i2c5 {
+	imx219@10 {
+		csi-id = <1>;
+	};
+
+	ov5640@3c {
+		csi-id = <1>;
+	};
+};
+
+&imx219_out {
+	remote-endpoint = <&ccic1_in>;
+};
+
+&ov5640_gmsl_out {
+	remote-endpoint = <&ccic1_in_alt>;
+};
+
+&ov5647_out {
+	remote-endpoint = <&ccic2_in>;
+};
+
+&ccic1_in {
+	remote-endpoint = <&imx219_out>;
+};
+
+&ccic1_in_alt {
+	remote-endpoint = <&ov5640_gmsl_out>;
+};
+
+&ccic2_in {
+	remote-endpoint = <&ov5647_out>;
+};
+
+&flexcan0 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can0_1_cfg>;
+	status = "okay";
+};
+
+&flexcan1 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can1_0_cfg>;
+	status = "okay";
+};
+
+&flexcan2 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can2_0_cfg>;
+	status = "okay";
+};
+
+&flexcan3 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can3_1_cfg>;
+	status = "okay";
+};
+
+&flexcan4 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can4_1_cfg>;
+	status = "okay";
+};
+
+&r_flexcan2 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&rcan2_0_cfg>;
+	status = "okay";
+};
+
+&ccic0 {
+	status = "disabled";
+};
+
+&ccic1 {
+	status = "okay";
+};
+
+&ccic2 {
+	status = "okay";
+};
+
+&ccic3 {
+	status = "disabled";
+};
+
+&csiphy0 {
+	status = "disabled";
+};
+
+&csiphy1 {
+	status = "okay";
+};
+
+&csiphy2 {
+	spacemit,bifmode-enable = <0>;
+	status = "okay";
+};
+
+&rpmi_regulator {
+	edcdc2: edcdc2 {
+		regulator-max-microvolt = <1100000>;
+	};
+
+	edcdc1: edcdc1 {
+		regulator-max-microvolt = <1100000>;
+	};
+};

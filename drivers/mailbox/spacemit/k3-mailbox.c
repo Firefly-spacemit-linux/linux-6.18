@@ -25,7 +25,8 @@ static irqreturn_t spacemit_mbox_irq(int irq, void *dev_id)
 {
 	struct spacemit_mailbox *mbox = dev_id;
 	struct mbox_chan *chan;
-	u32 status, msg;
+	u32 status, msgs[SPACEMIT_NUM_CHANNELS] = {};
+	u32 txdone_mask = 0, rxdata_mask = 0;
 	int i, j;
 	mbox_msg_status_t mstatus;
 	unsigned long flags;
@@ -55,7 +56,7 @@ static irqreturn_t spacemit_mbox_irq(int irq, void *dev_id)
 			writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_status_clr);
 
 			if (chan->txdone_method & TXDONE_BY_IRQ)
-				mbox_chan_txdone(chan, 0);
+				txdone_mask |= BIT(i);
 		}
 
 		/* new msg irq */
@@ -63,12 +64,12 @@ static irqreturn_t spacemit_mbox_irq(int irq, void *dev_id)
 
 			/* clear the fifo */
 			while (1) {
-				msg = readl((void *)&mbox->regs->mbox_msg[i]);
+				msgs[i] = readl((void *)&mbox->regs->mbox_msg[i]);
 				mstatus.val = readl((void *)&mbox->regs->msg_status[i]);
 				if (mstatus.bits.num_msg == 0)
 					break;
 			}
-			mbox_chan_received_data(chan, &msg);
+			rxdata_mask |= BIT(i);
 
 #if 0
 			/* disable the new msg irq */
@@ -81,9 +82,22 @@ static irqreturn_t spacemit_mbox_irq(int irq, void *dev_id)
 			j |= (1 << (i * 2));
 			writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_status_clr);
 		}
-        }
+	}
 
 	spin_unlock_irqrestore(&mbox->lock, flags);
+
+	/*
+	 * Call framework callbacks without holding mbox->lock. mbox_chan_txdone
+	 * acquires chan->lock, while the send path holds chan->lock when calling
+	 * into this driver (which takes mbox->lock), causing lock inversion.
+	 */
+	for (i = 0; i < SPACEMIT_NUM_CHANNELS; ++i) {
+		chan = &mbox->controller.chans[i];
+		if (txdone_mask & BIT(i))
+			mbox_chan_txdone(chan, 0);
+		if (rxdata_mask & BIT(i))
+			mbox_chan_received_data(chan, &msgs[i]);
+	}
 
 	return IRQ_HANDLED;
 }
@@ -97,40 +111,25 @@ static int spacemit_chan_send_data(struct mbox_chan *chan, void *data)
 
 	spin_lock_irqsave(&mbox->lock, flags);
 
-#if 0
-	/* disable new msg irq */
-	j = readl((void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_clr);
-	j |= (1 << (chan_num * 2));
-	writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_clr);
-
-	/* clear pending */
-	j = readl((void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_status_clr);
-	j |= (1 << (chan_num * 2));
-	writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_status_clr);
-#endif
-
-	/* enable the other end new msg irq */
-	j = readl((void *)&mbox->regs->mbox_irq[USER1_MBOX_OFFSET].irq_en_set);
-	j |= (1 << (chan_num * 2));
-	writel(j, (void *)&mbox->regs->mbox_irq[USER1_MBOX_OFFSET].irq_en_set);
-
         /* send data */
-	writel('c', (void *)&mbox->regs->mbox_msg[chan_num]);
-#if 0
-        /* set other end new msg irq thresh */
-        j = readl((void *)&mbox->regs->mbox_thresh[USER1_MBOX_OFFSET].thresh0);
-        j |= 7 << (chan_num * 8);
-        writel(j, (void *)&mbox->regs->mbox_thresh[USER1_MBOX_OFFSET].thresh0);
-#endif
-	/* set not full thresh */
-	j = readl((void *)&mbox->regs->mbox_thresh[USER0_MBOX_OFFSET].thresh0);
-	j |= 1 << (chan_num * 8 + 4);
-	writel(j, (void *)&mbox->regs->mbox_thresh[USER0_MBOX_OFFSET].thresh0);
+	writel(data ? *(u32 *)data : 0, (void *)&mbox->regs->mbox_msg[chan_num]);
 
-	/* enable not full irq */
-	j = readl((void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
-	j |= (1 << (chan_num * 2 + 1));
-	writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
+	if (!mbox->is_remote) {
+		/* enable the other end new msg irq */
+		j = readl((void *)&mbox->regs->mbox_irq[USER1_MBOX_OFFSET].irq_en_set);
+		j |= (1 << (chan_num * 2));
+		writel(j, (void *)&mbox->regs->mbox_irq[USER1_MBOX_OFFSET].irq_en_set);
+
+		/* set not full thresh */
+		j = readl((void *)&mbox->regs->mbox_thresh[USER0_MBOX_OFFSET].thresh0);
+		j |= 1 << (chan_num * 8 + 4);
+		writel(j, (void *)&mbox->regs->mbox_thresh[USER0_MBOX_OFFSET].thresh0);
+
+		/* enable not full irq */
+		j = readl((void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
+		j |= (1 << (chan_num * 2 + 1));
+		writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
+	}
 
 	spin_unlock_irqrestore(&mbox->lock, flags);
 
@@ -141,7 +140,7 @@ static int spacemit_chan_startup(struct mbox_chan *chan)
 {
 	struct spacemit_mailbox *mbox = chan->con_priv;
 	u32 chan_num = chan - mbox->controller.chans;
-	u32 msg;
+	u32 msg, j;
 	mbox_msg_status_t mstatus;
 	unsigned long flags;
 
@@ -153,6 +152,13 @@ static int spacemit_chan_startup(struct mbox_chan *chan)
 		msg = readl((void *)&mbox->regs->mbox_msg[chan_num]);
 		if (mstatus.bits.num_msg == 0)
 			break;
+	}
+
+	/* Enable USER0 new-msg IRQ for local mailbox to receive cross-die messages */
+	if (!mbox->is_remote) {
+		j = readl((void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
+		j |= (1 << (chan_num * 2));
+		writel(j, (void *)&mbox->regs->mbox_irq[USER0_MBOX_OFFSET].irq_en_set);
 	}
 
 	spin_unlock_irqrestore(&mbox->lock, flags);
@@ -242,13 +248,16 @@ static int spacemit_mailbox_probe(struct platform_device *pdev)
 	}
 
 	mbox->ap_communicate = of_property_read_bool(pdev->dev.of_node, "ap-communicate");
+	mbox->is_remote = (bool)(uintptr_t)of_device_get_match_data(dev);
 
-	/* request irq */
-	ret = devm_request_irq(dev, platform_get_irq(pdev, 0),
-			       spacemit_mbox_irq, 0, dev_name(dev), mbox);
-	if (ret) {
-		dev_err(dev, "Failed to register IRQ handler: %d\n", ret);
-		return ret;
+	/* request irq only for local mailbox */
+	if (!mbox->is_remote) {
+		ret = devm_request_irq(dev, platform_get_irq(pdev, 0),
+				       spacemit_mbox_irq, 0, dev_name(dev), mbox);
+		if (ret) {
+			dev_err(dev, "Failed to register IRQ handler: %d\n", ret);
+			return ret;
+		}
 	}
 
 	/* register the mailbox controller */
@@ -256,9 +265,20 @@ static int spacemit_mailbox_probe(struct platform_device *pdev)
 	mbox->controller.ops = &spacemit_chan_ops;
 	mbox->controller.chans = chans;
 	mbox->controller.num_chans = SPACEMIT_NUM_CHANNELS;
-	mbox->controller.txdone_irq = true;
-	mbox->controller.txdone_poll = false;
-	mbox->controller.txpoll_period = 5;
+
+	if (mbox->is_remote) {
+		/* Remote mailbox: txdone IRQ fires on the remote CPU,
+		 * not locally. Use polling with last_tx_done() == true
+		 * to free the channel immediately.
+		 */
+		mbox->controller.txdone_irq = false;
+		mbox->controller.txdone_poll = true;
+		mbox->controller.txpoll_period = 1;
+	} else {
+		mbox->controller.txdone_irq = true;
+		mbox->controller.txdone_poll = false;
+		mbox->controller.txpoll_period = 5;
+	}
 
 	spin_lock_init(&mbox->lock);
 	platform_set_drvdata(pdev, mbox);
@@ -280,7 +300,8 @@ static void spacemit_mailbox_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id spacemit_mailbox_of_match[] = {
-	{ .compatible = "spacemit,k3-mailbox", },
+	{ .compatible = "spacemit,k3-mailbox", .data = (void *)false },
+	{ .compatible = "spacemit,k3-rmailbox", .data = (void *)true },
 	{},
 };
 MODULE_DEVICE_TABLE(of, spacemit_mailbox_of_match);

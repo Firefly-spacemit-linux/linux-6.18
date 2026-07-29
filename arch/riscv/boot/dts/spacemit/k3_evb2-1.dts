@@ -322,6 +322,28 @@
 			power-source = <3300>;
 		};
 	};
+
+	mmc1_cd_cfg: mmc1-cd-cfg {
+		mmc1-cd-pins {
+			pinmux = <K3_PADCONF(86, 0)>;	/* cd gpio */
+
+			bias-pull-up = <1>;
+			drive-strength = <8>;
+			power-source = <3300>;
+		};
+	};
+
+	qspi-cfg {
+		qspi-pins {
+			power-source = <1800>;
+		};
+	};
+
+	qspi-cs0-cfg {
+		qspi-cs0-pins {
+			power-source = <1800>;
+		};
+	};
 };
 
 &uart0 {
@@ -344,14 +366,15 @@
 };
 
 &qspi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&qspi_cfg &qspi_cs0_cfg>;
 	status = "disabled";
 };
 
 &sdcard {
-	pinctrl-names = "default","uhs","debug";
-	pinctrl-0 = <&mmc1_cfg>;
-	pinctrl-1 = <&mmc1_uhs_cfg>;
-	pinctrl-2 = <&mmc1_debug_cfg>;
+	pinctrl-names = "default","uhs";
+	pinctrl-0 = <&mmc1_cfg &mmc1_cd_cfg>;
+	pinctrl-1 = <&mmc1_uhs_cfg &mmc1_cd_cfg>;
 	bus-width = <4>;
 	wp-inverted;
 	cd-gpios = <&gpio 2 22 GPIO_ACTIVE_LOW>;
@@ -508,6 +531,8 @@
 			compatible = "ethernet-phy-id001c.c916",
 				     "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
+			realtek,aldps-enable;
+			realtek,clkout-disable;
 			device_type = "ethernet-phy";
 
 			leds {
@@ -564,6 +589,8 @@
 			compatible = "ethernet-phy-id001c.c916",
 				     "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
+			realtek,aldps-enable;
+			realtek,clkout-disable;
 			device_type = "ethernet-phy";
 
 			leds {
@@ -620,6 +647,8 @@
 			compatible = "ethernet-phy-id001c.c916",
 				     "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
+			realtek,aldps-enable;
+			realtek,clkout-disable;
 			device_type = "ethernet-phy";
 
 			leds {
@@ -676,6 +705,8 @@
 			compatible = "ethernet-phy-id001c.c916",
 				     "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
+			realtek,aldps-enable;
+			realtek,clkout-disable;
 			device_type = "ethernet-phy";
 
 			leds {
@@ -1031,14 +1062,14 @@
 
 	edcdc2: edcdc2 {
 		regulator-min-microvolt = <534000>;
-		regulator-max-microvolt = <1005000>;
+		regulator-max-microvolt = <1100000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
 
 	edcdc1: edcdc1 {
 		regulator-min-microvolt = <534000>;
-		regulator-max-microvolt = <1005000>;
+		regulator-max-microvolt = <1100000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};

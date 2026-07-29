@@ -9,9 +9,11 @@
 #include <linux/kernel.h>
 #include <linux/log2.h>
 #include <linux/types.h>
-#include <sys/mman.h>
 
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <elf.h>
 
 #include "auxtrace.h"
 #include "color.h"
@@ -28,6 +30,8 @@
 #include "thread-stack.h"
 #include "util.h"
 #include "dso.h"
+#include "symbol.h"
+#include "maps.h"
 #include "addr_location.h"
 #include <inttypes.h>
 #include "util/synthetic-events.h"
@@ -54,6 +58,8 @@ struct rvtrace_auxtrace {
 	u64 branches_id;
 	u64 **metadata;
 	unsigned int pmu_type;
+	struct dso *firmware_dso;
+	struct maps *firmware_maps;
 };
 
 struct rvtrace_queue {
@@ -81,42 +87,116 @@ static void rvtrace_set_thread(struct rvtrace_queue *rvtraceq,
 		rvtraceq->thread = machine__idle_thread(rvtrace->machine);
 }
 
-static u32 rvtrace_devmem_access(u64 address, size_t size, u8 *buffer)
+/*
+ * Register firmware ELF PT_LOAD segments as maps in the machine's kernel maps,
+ * so that perf script can resolve symbols for M-mode (machine mode) samples.
+ *
+ * base is the absolute physical load address of the firmware (from --firmware-base).
+ * p_paddr in the ELF is the relative address within the firmware image.
+ *
+ *   map->start = base + p_paddr
+ *   map->end   = base + p_paddr + p_memsz
+ *   map->pgoff = p_offset
+ *
+ * map__map_ip(paddr) = paddr - start + pgoff = p_offset + (paddr - base - p_paddr)
+ */
+static int rvtrace_register_firmware_maps(struct rvtrace_auxtrace *rvtrace,
+					      struct dso *dso, u64 base)
 {
-	int fd;
-	void *map_base, *virt_addr;
-	u64 page_size = 4096, mapped_size = 4096;
-	u64 page_base = address & ~(page_size - 1);
-	u64 offset_in_page = address - page_base;
-	unsigned int width = 8 * size;
+	Elf64_Ehdr ehdr;
+	Elf64_Phdr phdr;
+	int fd, i, ret = 0;
+	const char *filename = dso__long_name(dso);
 
-	if (offset_in_page + width > page_size)
-		mapped_size *= 2;
-
-	fd = open("/dev/mem", O_RDONLY | O_SYNC);
+	fd = open(filename, O_RDONLY);
 	if (fd < 0)
-		return 0;
+		return -1;
 
-	map_base = mmap(NULL, mapped_size, PROT_READ, MAP_SHARED, fd, (off_t)(page_base));
-	if (map_base == MAP_FAILED) {
-		pr_debug("failed to mmap device address 0x%lx\n", address);
-		close(fd);
+	if (pread(fd, &ehdr, sizeof(ehdr), 0) != sizeof(ehdr)) {
+		ret = -1;
+		goto out;
+	}
+
+	for (i = 0; i < ehdr.e_phnum; i++) {
+		struct map *map;
+
+		if (pread(fd, &phdr, sizeof(phdr),
+			  ehdr.e_phoff + (u64)i * ehdr.e_phentsize) != sizeof(phdr))
+			continue;
+
+		if (phdr.p_type != PT_LOAD || phdr.p_memsz == 0)
+			continue;
+
+		map = map__new2(base + phdr.p_paddr, dso);
+		if (!map) {
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		map__set_end(map, base + phdr.p_paddr + phdr.p_memsz);
+		map__set_pgoff(map, phdr.p_offset);
+
+		pr_debug("rvtrace: machine code map [%#"PRIx64"-%#"PRIx64"] pgoff=%#"PRIx64" %s\n",
+			 base + phdr.p_paddr, base + phdr.p_paddr + phdr.p_memsz,
+			 (u64)phdr.p_offset, dso__long_name(dso));
+
+		ret = maps__insert(rvtrace->firmware_maps, map);
+		map__put(map);
+		if (ret)
+			goto out;
+	}
+out:
+	close(fd);
+	return ret;
+}
+
+static int rvtrace_insert_map_cb(struct map *map, void *data)
+{
+	struct maps *kmaps = data;
+
+	maps__insert(kmaps, map);
+	return 0;
+}
+
+static u32 rvtrace_machine_mode_access(struct rvtrace_queue *rvtraceq, u64 address,
+				       size_t size, u8 *buffer)
+{
+	struct machine *machine = rvtraceq->rvtrace->machine;
+	struct map *map;
+	struct dso *dso;
+	u64 offset;
+	int len;
+
+	if (!rvtraceq->rvtrace->firmware_dso) {
+		ui__warning_once("RISC-V Nexus Trace: Machine mode code binary not provided.\n"
+				 "                  Failed to read address 0x%lx.\n"
+				 "                  Use option '-m /path/to/firmware --firmware-base 0xBASE'\n"
+				 "                  to specify the binary and its base address.\n",
+				 address);
 		return 0;
 	}
 
-	virt_addr = (char*)map_base + offset_in_page;
+	map = maps__find(rvtraceq->rvtrace->firmware_maps, address);
+	if (!map)
+		return 0;
 
 	/*
-	 * Note: higher versions of glibc use automatic vectorization by
-	 * default for memcpy, which can lead to incorrect memory results.
+	 * Insert firmware maps into kernel maps for symbol resolution.
+	 * Re-insert if kcore loading has removed them (kcore calls
+	 * maps__remove_maps which clears all non-kernel maps).
 	 */
-	for (size_t i = 0; i < size; i++)
-		buffer[i] = ((volatile u8*)virt_addr)[i];
-	// memcpy(buffer, virt_addr, size);
+	if (!maps__find(machine__kernel_maps(machine), address)) {
+		maps__for_each_map(rvtraceq->rvtrace->firmware_maps,
+				   rvtrace_insert_map_cb,
+				   machine__kernel_maps(machine));
+		map__load(map);
+	}
 
-	munmap(map_base, mapped_size);
-	close(fd);
-	return size;
+	dso = map__dso(map);
+	offset = map__map_ip(map, address);
+	len = dso__data_read_offset(dso, machine, offset, buffer, size);
+	map__put(map);
+	return len > 0 ? len : 0;
 }
 
 static u32 rvtrace_mem_access(void *data, u64 address, enum riscv_privilege_mode prv,
@@ -136,9 +216,9 @@ static u32 rvtrace_mem_access(void *data, u64 address, enum riscv_privilege_mode
 
 	addr_location__init(&al);
 
-	/* If the riscv_privilege_mode is machine mode, access physical address by /dev/mem */
+	/* M-mode uses physical addresses, handle separately via kernel maps */
 	if (prv == RISCV_PRIV_MACHINE_MODE)
-		return rvtrace_devmem_access(address, size, buffer);
+		return rvtrace_machine_mode_access(rvtraceq, address, size, buffer);
 
 	machine = rvtraceq->rvtrace->machine;
 	if (address >= machine__kernel_start(machine))
@@ -342,6 +422,8 @@ static int rvtrace_process_queue(struct rvtrace_queue *rvtraceq)
 			rvtrace_synth_branch_sample(rvtraceq, &packet);
 		else if (packet.sample_type == RVTRACE_LOSS)
 			fprintf(stdout, "RISC-V Trace: A FIFO overrun has resulted in the loss of one or more messages\n");
+		else if (packet.sample_type == RVTRACE_ERROR)
+			fprintf(stdout, "RISC-V Trace: An error occurred while parsing trace packet data\n");
 	}
 
 	return 0;
@@ -713,6 +795,9 @@ static void rvtrace_free(struct perf_session *session)
 		zfree(&rvtrace->metadata[i]);
 
 	zfree(&rvtrace->metadata);
+	if (rvtrace->firmware_dso)
+		dso__put(rvtrace->firmware_dso);
+	maps__put(rvtrace->firmware_maps);
 	zfree(&rvtrace);
 }
 
@@ -995,6 +1080,30 @@ int rvtrace_process_auxtrace_info(union perf_event *event,
 
 	rvtrace->auxtrace_type = auxtrace_info->type;
 	rvtrace->timeless_decoding = rvtrace_is_timeless_decoding(rvtrace);
+
+	/* Load firmware binary if specified */
+	if (symbol_conf.firmware_name) {
+		u64 base_addr = 0;
+
+		if (symbol_conf.firmware_base)
+			base_addr = strtoull(symbol_conf.firmware_base, NULL, 0);
+
+		rvtrace->firmware_dso = dso__new(symbol_conf.firmware_name);
+		if (rvtrace->firmware_dso) {
+			rvtrace->firmware_maps = maps__new(rvtrace->machine);
+			if (!rvtrace->firmware_maps ||
+			    rvtrace_register_firmware_maps(rvtrace,
+							       rvtrace->firmware_dso,
+							       base_addr) < 0) {
+				pr_err("Failed to register machine code maps: %s\n",
+					symbol_conf.firmware_name);
+				dso__put(rvtrace->firmware_dso);
+				rvtrace->firmware_dso = NULL;
+				maps__put(rvtrace->firmware_maps);
+				rvtrace->firmware_maps = NULL;
+			}
+		}
+	}
 
 	rvtrace->auxtrace.process_event = rvtrace_process_event;
 	rvtrace->auxtrace.process_auxtrace_event = rvtrace_process_auxtrace_event;

@@ -211,6 +211,18 @@
 			power-source = <3300>;
 		};
 	};
+
+	qspi-cfg {
+		qspi-pins {
+			power-source = <1800>;
+		};
+	};
+
+	qspi-cs0-cfg {
+		qspi-cs0-pins {
+			power-source = <1800>;
+		};
+	};
 };
 
 &uart0 {
@@ -233,6 +245,8 @@
 };
 
 &qspi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&qspi_cfg &qspi_cs0_cfg>;
 	status = "disabled";
 };
 
@@ -538,14 +552,14 @@
 
 	adcdc2: adcdc2 {
 		regulator-min-microvolt = <540000>;
-		regulator-max-microvolt = <1000000>;
+		regulator-max-microvolt = <1100000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
 
 	adcdc1: adcdc1 {
 		regulator-min-microvolt = <540000>;
-		regulator-max-microvolt = <1000000>;
+		regulator-max-microvolt = <1100000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
@@ -720,6 +734,12 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c3_3_cfg>;
 	status = "okay";
+
+	spacemit@51 {
+		status = "okay";
+		compatible = "spacemit,i2c-slave";
+		reg = <0x51>;
+	};
 };
 
 &i2c6 {

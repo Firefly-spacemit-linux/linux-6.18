@@ -2097,8 +2097,16 @@ static int soc_dp_conn_get_modes(struct drm_connector *connector)
 	count = drm_edid_connector_add_modes(connector);
 
 	list_for_each_entry_safe(mode, tmp, &connector->probed_modes, head) {
-		if (mode->hdisplay == 2560) {
+		if (mode->hdisplay >= 2560) {
 			if (drm_mode_vrefresh(mode) > 90) {
+				list_del(&mode->head);
+				drm_mode_destroy(dev, mode);
+				count--;
+			}
+		}
+
+		if (mode->hdisplay >= 3840) {
+			if (drm_mode_vrefresh(mode) > 60) {
 				list_del(&mode->head);
 				drm_mode_destroy(dev, mode);
 				count--;
@@ -2269,7 +2277,7 @@ static void soc_dp_encoder_enable(struct drm_encoder *encoder)
 		if (soc_dp_phy_power_on(dp))
 			continue;
 
-		if (soc_dp_hw_detect_hpd(dp) == connector_status_disconnected) {
+		if (!dp->edp_mode && soc_dp_hw_detect_hpd(dp) == connector_status_disconnected) {
 			mutex_unlock(&dp->mode_lock);
 			dev_warn(dp->dev, "DP: Training failed for the connector is disconnected\n");
 			return;
@@ -2954,6 +2962,7 @@ static int soc_dp_bind(struct device *dev, struct device *master, void *data)
 		return ret;
 	}
 #endif
+	device_enable_async_suspend(dev);
 
 	return 0;
 }
