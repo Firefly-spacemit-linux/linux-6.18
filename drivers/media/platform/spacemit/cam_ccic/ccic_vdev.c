@@ -634,6 +634,7 @@ static unsigned int cvdev_sensor_link_freq_mbps(struct v4l2_subdev *sensor_sd)
 static int cvdev_config_default_path(struct ccic_vnode *sc_vnode)
 {
 	struct ccic_dev *ccic_dev = sc_vnode->ccic_dev;
+	struct ccic_path_default path;
 	unsigned int csi_id = ccic_dev->index;
 	unsigned int path_id = sc_vnode->idx % PATH_NUM_PER_DEV;
 	struct v4l2_subdev *sensor_sd;
@@ -666,8 +667,16 @@ static int cvdev_config_default_path(struct ccic_vnode *sc_vnode)
 	if (!mipi_m_bps)
 		mipi_m_bps = 914;
 
-	return cvdev_config_path(sc_vnode, &ccic_path_defaults[csi_id][path_id],
-				 lane_num, mipi_m_bps);
+	path = ccic_path_defaults[csi_id][path_id];
+	if (ccic_dev->default_dt_filter_en) {
+		path.dt_filter_en = 1;
+		path.dt_filter0_en = 1;
+		path.dt_filter0 = ccic_dev->default_dt_filter0;
+		path.dt_filter1_en = 0;
+		path.dt_filter1 = 0;
+	}
+
+	return cvdev_config_path(sc_vnode, &path, lane_num, mipi_m_bps);
 }
 
 static int cvdev_ensure_path_configured(struct ccic_vnode *sc_vnode)
