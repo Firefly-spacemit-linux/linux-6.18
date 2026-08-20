@@ -140,26 +140,25 @@ void hmp_cpumask_init(void)
 {
 	struct device_node *node;
 	const char *cpu_ai;
-	unsigned long hartid;
-	int rc;
+	int cpu;
 
 	cpumask_clear(&ai_cpu_mask);
 	cpumask_clear(&regular_cpu_mask);
 
 	for_each_of_cpu_node(node) {
-		rc = riscv_of_processor_hartid(node, &hartid);
-		if (rc < 0) {
-			pr_warn("Failed to get hartid for CPU node\n");
+		cpu = of_cpu_node_to_id(node);
+		if (cpu < 0) {
+			pr_warn("Failed to get logical CPU ID for CPU node\n");
 			continue;
 		}
 
 		if (of_property_read_string(node, "cpu-ai", &cpu_ai)) {
-			cpumask_set_cpu(hartid, &regular_cpu_mask);
+			cpumask_set_cpu(cpu, &regular_cpu_mask);
 			continue;
 		}
 
 		if (!strcmp(cpu_ai, "true"))
-			cpumask_set_cpu(hartid, &ai_cpu_mask);
+			cpumask_set_cpu(cpu, &ai_cpu_mask);
 	}
 }
 
