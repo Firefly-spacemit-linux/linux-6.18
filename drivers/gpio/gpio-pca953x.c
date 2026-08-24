@@ -1161,6 +1161,8 @@ static int pca953x_probe(struct i2c_client *client)
 	int irq_base;
 	int ret;
 	const struct regmap_config *regmap_config;
+	struct device_node *node = dev->of_node;
+	u32 gpio_group_start = 500;
 
 	chip = devm_kzalloc(dev, sizeof(*chip), GFP_KERNEL);
 	if (chip == NULL)
@@ -1170,6 +1172,9 @@ static int pca953x_probe(struct i2c_client *client)
 	if (pdata) {
 		irq_base = pdata->irq_base;
 		chip->gpio_start = pdata->gpio_base;
+	} else if (!of_property_read_u32(node, "gpio-group-num", &gpio_group_start)) {
+		chip->gpio_start = gpio_group_start;
+		irq_base = 0;
 	} else {
 		struct gpio_desc *reset_gpio;
 
