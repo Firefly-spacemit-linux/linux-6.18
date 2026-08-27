@@ -306,7 +306,7 @@ static int husb311_probe(struct i2c_client *client)
 
 	ret = devm_request_threaded_irq(chip->dev, client->irq, NULL,
 					husb311_irq,
-					IRQF_ONESHOT | IRQF_TRIGGER_LOW,
+					IRQF_ONESHOT | IRQF_TRIGGER_FALLING,
 					client->name, chip);
 	if (ret < 0) {
 		tcpci_unregister_port(chip->tcpci);
