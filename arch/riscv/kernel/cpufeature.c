@@ -52,6 +52,12 @@ atomic_t scontext_disable;
 DEFINE_STATIC_KEY_FALSE_RO(use_hcontext);
 EXPORT_SYMBOL(use_hcontext);
 
+noinline bool riscv_has_hcontext(void)
+{
+	return static_branch_likely(&use_hcontext);
+}
+EXPORT_SYMBOL_GPL(riscv_has_hcontext);
+
 DEFINE_STATIC_KEY_FALSE_RO(use_scontext);
 EXPORT_SYMBOL(use_scontext);
 

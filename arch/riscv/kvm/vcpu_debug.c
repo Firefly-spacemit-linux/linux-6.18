@@ -4,16 +4,12 @@
  */
 
 #include <linux/kvm_host.h>
+#include <asm/cpufeature.h>
 #include <asm/switch_to.h>
 
 DEFINE_SPINLOCK(hcontext_lock);
 unsigned long *hcontext_bitmap;
 unsigned long hcontext_bitmap_len;
-
-static __always_inline bool has_hcontext(void)
-{
-	return static_branch_likely(&use_hcontext);
-}
 
 void kvm_riscv_debug_init(void)
 {
@@ -28,7 +24,7 @@ void kvm_riscv_debug_init(void)
 #else
 	unsigned long tmp = atomic_long_read(&hcontext_id_share) & GENMASK(6, 0);
 #endif
-	if (has_hcontext()) {
+	if (riscv_has_hcontext()) {
 		while (tmp) {
 			kvm_info("hcontext: try to allocate 0x%lx-bit array\n", tmp);
 			hcontext_bitmap_len = tmp + 1;
@@ -50,7 +46,7 @@ void kvm_riscv_debug_init(void)
 
 void kvm_riscv_debug_exit(void)
 {
-	if (has_hcontext()) {
+	if (riscv_has_hcontext()) {
 		static_branch_disable(&use_hcontext);
 		kfree(hcontext_bitmap);
 	}
@@ -58,7 +54,7 @@ void kvm_riscv_debug_exit(void)
 
 void kvm_riscv_debug_get_hcontext_id(struct kvm *kvm)
 {
-	if (has_hcontext()) {
+	if (riscv_has_hcontext()) {
 		unsigned long free_id;
 
 		spin_lock(&hcontext_lock);
@@ -77,7 +73,7 @@ void kvm_riscv_debug_get_hcontext_id(struct kvm *kvm)
 
 void kvm_riscv_debug_return_hcontext_id(struct kvm *kvm)
 {
-	if (has_hcontext()) {
+	if (riscv_has_hcontext()) {
 		spin_lock(&hcontext_lock);
 		clear_bit(kvm->arch.hcontext, hcontext_bitmap);
 		spin_unlock(&hcontext_lock);
@@ -89,7 +85,7 @@ void kvm_riscv_debug_vcpu_swap_in_guest_context(struct kvm_vcpu *vcpu)
 	struct kvm_vcpu_sdtrig_csr *csr = &vcpu->arch.sdtrig_csr;
 	unsigned long hcontext = vcpu->kvm->arch.hcontext;
 
-	if (has_hcontext())
+	if (riscv_has_hcontext())
 		csr_write(CSR_HCONTEXT, hcontext);
 	if (has_scontext())
 		vcpu->arch.host_scontext = csr_swap(CSR_SCONTEXT, csr->scontext);
@@ -100,7 +96,7 @@ void kvm_riscv_debug_vcpu_swap_in_host_context(struct kvm_vcpu *vcpu)
 	struct kvm_vcpu_sdtrig_csr *csr = &vcpu->arch.sdtrig_csr;
 
 	/* Hypervisor uses the hcontext ID 0 */
-	if (has_hcontext())
+	if (riscv_has_hcontext())
 		csr_write(CSR_HCONTEXT, 0);
 	if (has_scontext())
 		csr->scontext = csr_swap(CSR_SCONTEXT, vcpu->arch.host_scontext);
