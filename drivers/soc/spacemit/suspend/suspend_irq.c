@@ -61,16 +61,34 @@ static int irq_affinity_suspend(struct device *dev)
 
 static int irq_affinity_resume(struct device *dev)
 {
-	int i, err;
+	int i, err, ret = 0;
+	int success_count = 0;
+	int failed_count = 0;
+
+	if (!irqaff)
+		return 0;
 
 	for (i = 0; i < active_irq_num; i++) {
 		err = irq_set_affinity(irqaff[i].irq, cpumask_of(irqaff[i].cpu));
 		if (err) {
-			pr_err("IRQ%u migrate to cpu%u failed\n", irqaff[i].irq, irqaff[i].cpu);
+			pr_err("IRQ%u migrate to cpu%u failed: %d\n",
+			       irqaff[i].irq, irqaff[i].cpu, err);
+			failed_count++;
+			ret = err;  /* Keep last error code */
+		} else {
+			success_count++;
 		}
 	}
 
-	return 0;
+	if (failed_count > 0) {
+		pr_err("IRQ affinity restore: %d succeeded, %d failed (total %d)\n",
+		       success_count, failed_count, active_irq_num);
+	}
+
+	kfree(irqaff);
+	irqaff = NULL;
+
+	return ret;
 }
 
 static const struct dev_pm_ops irq_affinity_pm_ops = {
