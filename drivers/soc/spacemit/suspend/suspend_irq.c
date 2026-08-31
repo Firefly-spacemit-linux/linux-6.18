@@ -26,6 +26,7 @@ static struct irq_domain *affi_domain = NULL;
 static int irq_affinity_suspend(struct device *dev)
 {
 	struct irq_data *d;
+	struct irq_desc *desc;
 	struct imsic_vector *vec;
 	int irq, i = 0;
 
@@ -51,6 +52,14 @@ static int irq_affinity_suspend(struct device *dev)
 
 		irqaff[i].irq = irq;
 		irqaff[i].cpu = vec->cpu;
+
+#ifdef CONFIG_GENERIC_PENDING_IRQ
+		desc = irq_to_desc(irq);
+		if (desc && irqd_is_setaffinity_pending(&desc->irq_data) &&
+		    !cpumask_empty(desc->pending_mask))
+			irqaff[i].cpu = cpumask_first(desc->pending_mask);
+#endif
+
 		i++;
 	}
 
