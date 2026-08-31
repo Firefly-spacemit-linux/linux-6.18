@@ -475,9 +475,31 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
 	regmap_update_bits(k1->pmu, reset_ctrl, LTSSM_EN, 0);
 	k1_pcie_toggle_soft_reset(k1);
 
+	/* Start by asserting fundamental reset (drive PERST# low). */
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	/* Assert PERST# via GPIO if available, otherwise use controller register */
+	if (k1->pci.pe_rst) {
+		ret = gpiod_direction_output(k1->pci.pe_rst, 1);
+		if (ret)
+			return ret;
+	} else {
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT,
+				   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE);
+	}
+#else
+	/* K1: Write, then read it back to guarantee the write
+	 * reaches the device before we start the delay.
+	 */
+	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
+	regmap_read(k1->pmu, reset_ctrl, &val);
+#endif
+
 	ret = k1_pcie_enable_resources(k1);
-	if (ret)
-		return ret;
+	if (ret) {
+		dev_info(k1->pci.dev, "Failed to enable resources: %d\n", ret);
+		goto err_deassert_perst;
+	}
 
 #ifdef CONFIG_SOC_SPACEMIT_K3
 	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_AUX_PWR_DET);
@@ -485,44 +507,28 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
 
 	ret = spacemit_pcie_config_lane_mux(k1);
 	if (ret) {
-		k1_pcie_disable_resources(k1);
-		return ret;
+		dev_info(k1->pci.dev, "Failed to configure lane mux: %d\n", ret);
+		goto err_disable_clks;
 	}
 
 	ret = spacemit_pcie_enable_phy(k1);
 	if (ret) {
-		k1_pcie_disable_resources(k1);
-		return ret;
+		dev_info(k1->pci.dev, "Failed to enable PHY: %d\n", ret);
+		goto err_disable_clks;
 	}
 #else
 	regmap_set_bits(k1->pmu, reset_ctrl, DEVICE_TYPE_RC | PCIE_AUX_PWR_DET);
 
 	ret = phy_init(k1->phy);
 	if (ret) {
-		k1_pcie_disable_resources(k1);
-
-		return ret;
+		dev_info(k1->pci.dev, "Failed to init PHY: %d\n", ret);
+		goto err_disable_clks;
 	}
 #endif
 
-	/*
-	 * Start by asserting fundamental reset (drive PERST# low).  The
-	 * PCI CEM spec says that PERST# should be deasserted at least
-	 * 100ms after the power becomes stable, so we'll insert that
-	 * delay first.  Write, then read it back to guarantee the write
-	 * reaches the device before we start the delay.
+	/* The PCI CEM spec says that PERST# should be asserted at least
+	 * 100ms after the power becomes stable.
 	 */
-#ifdef CONFIG_SOC_SPACEMIT_K3
-	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT,
-			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
-	usleep_range(1000, 2000);
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT, 0);
-#else
-	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
-	regmap_read(k1->pmu, reset_ctrl, &val);
-#endif
 	mdelay(PCIE_T_PVPERL_MS);
 
 	/*
@@ -530,9 +536,12 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
 	 * Vaux (3.3v) is present.
 	 */
 #ifdef CONFIG_SOC_SPACEMIT_K3
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
-			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+	if (k1->pci.pe_rst)
+		gpiod_set_value_cansleep(k1->pci.pe_rst, 0);
+	else
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
 	spacemit_pcie_eq_preset(k1);
 #endif
 
@@ -555,6 +564,20 @@ static int k1_pcie_init(struct dw_pcie_rp *pp)
 	k1_pcie_disable_aspm_l1(k1);
 
 	return 0;
+
+err_disable_clks:
+	k1_pcie_disable_resources(k1);
+
+err_deassert_perst:
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+#else
+	regmap_clear_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
+#endif
+
+	return ret;
 }
 
 static void k1_pcie_deinit(struct dw_pcie_rp *pp)
@@ -845,6 +868,64 @@ static int k1_pcie_disable_wakeup_irq(struct k1_pcie *k1)
 	return 0;
 }
 
+static void k1_pcie_start_link_retry_setup(struct k1_pcie *k1)
+{
+	regmap_clear_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL, LTSSM_EN);
+
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	if (k1->pci.pe_rst)
+		gpiod_set_value_cansleep(k1->pci.pe_rst, 1);
+	else
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+				   PCIE_PERSTN_OE);
+#endif
+
+	mdelay(PCIE_T_PVPERL_MS);
+
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	if (k1->pci.pe_rst)
+		gpiod_set_value_cansleep(k1->pci.pe_rst, 0);
+	else
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+#endif
+
+	mdelay(150);
+	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL, LTSSM_EN);
+}
+
+static int k1_pcie_start_link_resume_noirq(struct k1_pcie *k1)
+{
+	struct dw_pcie *pci = &k1->pci;
+	bool retry = true;
+	int ret;
+
+	ret = k1_pcie_start_link(pci);
+	if (ret) {
+		dev_err(pci->dev, "Failed to start link: %d\n", ret);
+		return ret;
+	}
+
+	if (!k1->link_up)
+		return 0;
+
+retry_link:
+	if (dw_pcie_wait_for_link(pci)) {
+		if (!retry)
+			return 0;
+
+		dev_warn(pci->dev, "Link training failed, retrying...\n");
+		k1_pcie_start_link_retry_setup(k1);
+
+		retry = false;
+		goto retry_link;
+	}
+
+	return 0;
+}
+
 static int k1_pcie_suspend_noirq(struct device *dev)
 {
 	struct k1_pcie *k1 = dev_get_drvdata(dev);
@@ -891,18 +972,43 @@ static int k1_pcie_resume_noirq(struct device *dev)
 	struct dw_pcie *pci = &k1->pci;
 	u32 reset_ctrl = k1->pmu_off + PCIE_CLK_RESET_CONTROL;
 	int ret;
+#ifndef CONFIG_SOC_SPACEMIT_K3
+	u32 val;
+#endif
 
 	if (!pci->suspended)
 		return 0;
 
 	k1_pcie_disable_wakeup_irq(k1);
 
-	pci->suspended = false;
-
+	regmap_update_bits(k1->pmu, reset_ctrl, LTSSM_EN, 0);
 	k1_pcie_toggle_soft_reset(k1);
+
+	/* Start by asserting fundamental reset (drive PERST# low). */
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	/* Assert PERST# via GPIO if available, otherwise use controller register */
+	if (k1->pci.pe_rst) {
+		ret = gpiod_direction_output(k1->pci.pe_rst, 1);
+		if (ret)
+			return ret;
+	} else {
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT,
+				   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE);
+	}
+#else
+	/* K1: Write, then read it back to guarantee the write
+	 * reaches the device before we start the delay.
+	 */
+	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
+	regmap_read(k1->pmu, reset_ctrl, &val);
+#endif
+
 	ret = clk_bulk_prepare_enable(ARRAY_SIZE(pci->app_clks), pci->app_clks);
-	if (ret)
-		return ret;
+	if (ret) {
+		dev_err(dev, "failed to enable app clocks: %d\n", ret);
+		goto err_deassert_perst;
+	}
 
 #ifdef CONFIG_SOC_SPACEMIT_K3
 	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_AUX_PWR_DET);
@@ -923,25 +1029,9 @@ static int k1_pcie_resume_noirq(struct device *dev)
 		goto err_disable_clks;
 #endif
 
-	regmap_update_bits(k1->pmu, reset_ctrl, LTSSM_EN, 0);
-	/*
-	 * Start by asserting fundamental reset (drive PERST# low).  The
-	 * PCI CEM spec says that PERST# should be deasserted at least
-	 * 100ms after the power becomes stable, so we'll insert that
-	 * delay first.  Write, then read it back to guarantee the write
-	 * reaches the device before we start the delay.
+	/* The PCI CEM spec says that PERST# should be asserted at least
+	 * 100ms after the power becomes stable.
 	 */
-#ifdef CONFIG_SOC_SPACEMIT_K3
-	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT,
-			   PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
-	usleep_range(1000, 2000);
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT, 0);
-#else
-	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
-	regmap_read(k1->pmu, reset_ctrl, &val);
-#endif
 	mdelay(PCIE_T_PVPERL_MS);
 
 	/*
@@ -949,9 +1039,12 @@ static int k1_pcie_resume_noirq(struct device *dev)
 	 * Vaux (3.3v) is present.
 	 */
 #ifdef CONFIG_SOC_SPACEMIT_K3
-	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
-			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+	if (k1->pci.pe_rst)
+		gpiod_set_value_cansleep(k1->pci.pe_rst, 0);
+	else
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
 	spacemit_pcie_eq_preset(k1);
 #endif
 
@@ -966,12 +1059,13 @@ static int k1_pcie_resume_noirq(struct device *dev)
 	spacemit_pcie_msi_host_init(&k1->pci.pp);
 	dw_pcie_setup_rc(&pci->pp);
 
-	ret = dw_pcie_start_link(pci);
-	if (ret)
+	ret = k1_pcie_start_link_resume_noirq(k1);
+	if (ret) {
+		dev_err(dev, "Failed to start link: %d\n", ret);
 		goto err_phy_exit;
+	}
 
-	if (k1->link_up)
-		dw_pcie_wait_for_link(pci);
+	pci->suspended = false;
 
 	return 0;
 
@@ -984,6 +1078,15 @@ err_phy_exit:
 
 err_disable_clks:
 	clk_bulk_disable_unprepare(ARRAY_SIZE(pci->app_clks), pci->app_clks);
+
+err_deassert_perst:
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+			   PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
+#else
+	regmap_clear_bits(k1->pmu, reset_ctrl, PCIE_RC_PERST);
+#endif
 
 	return ret;
 }

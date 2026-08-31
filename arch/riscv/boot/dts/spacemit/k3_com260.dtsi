@@ -119,6 +119,7 @@
 
 	i2c0-0-cfg {
 		i2c0-0-pins {
+			drive-strength = <5>;
 			power-source = <3300>;
 		};
 	};
@@ -446,8 +447,6 @@
 	phy-mode = "rgmii";
 	snps,reset-gpios = <&gpio 1 5 GPIO_ACTIVE_LOW>;
 	snps,reset-delays-us = <0 20000 100000>;
-
-	spacemit,wake-irq-enable;
 
 	spacemit,clk-tuning-enable;
 	spacemit,clk-tuning-by-delayline;
