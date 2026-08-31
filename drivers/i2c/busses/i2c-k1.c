@@ -176,27 +176,11 @@ struct spacemit_i2c_dev {
 #endif
 };
 
-static int spacemit_i2c_prepare_enable_clks(struct spacemit_i2c_dev *i2c)
+static void spacemit_i2c_scl_clk_disable_unprepare(void *data)
 {
-	int ret;
+	struct spacemit_i2c_dev *i2c = data;
 
-	ret = clk_prepare_enable(i2c->func_clk);
-	if (ret)
-		return ret;
-
-	ret = clk_prepare_enable(i2c->bus_clk);
-	if (ret) {
-		clk_disable_unprepare(i2c->func_clk);
-		return ret;
-	}
-
-	return 0;
-}
-
-static void spacemit_i2c_disable_unprepare_clks(struct spacemit_i2c_dev *i2c)
-{
-	clk_disable_unprepare(i2c->bus_clk);
-	clk_disable_unprepare(i2c->func_clk);
+	clk_disable_unprepare(i2c->scl_clk);
 }
 
 static int spacemit_i2c_clk_set_rate(struct clk_hw *hw, unsigned long rate,
@@ -827,7 +811,7 @@ static int spacemit_i2c_xfer(struct i2c_adapter *adapt, struct i2c_msg *msgs, in
 		 * onkey press action.
 		 */
 		if (ret == -EACCES) {
-			ret = clk_prepare_enable(i2c->func_clk);
+			ret = clk_enable(i2c->func_clk);
 			if (ret) {
 				dev_err(i2c->dev,
 					"failed to enable func clock directly: %d\n",
@@ -835,12 +819,12 @@ static int spacemit_i2c_xfer(struct i2c_adapter *adapt, struct i2c_msg *msgs, in
 				pm_runtime_put_noidle(i2c->dev);
 				return ret;
 			}
-			ret = clk_prepare_enable(i2c->bus_clk);
+			ret = clk_enable(i2c->bus_clk);
 			if (ret) {
 				dev_err(i2c->dev,
 					"failed to enable bus clock directly: %d\n",
 					ret);
-				clk_disable_unprepare(i2c->func_clk);
+				clk_disable(i2c->func_clk);
 				pm_runtime_put_noidle(i2c->dev);
 				return ret;
 			}
@@ -878,8 +862,8 @@ static int spacemit_i2c_xfer(struct i2c_adapter *adapt, struct i2c_msg *msgs, in
 
 	if (clk_directly) {
 		/* If clocks are enabled directly, here disable them */
-		clk_disable_unprepare(i2c->bus_clk);
-		clk_disable_unprepare(i2c->func_clk);
+		clk_disable(i2c->func_clk);
+		clk_disable(i2c->bus_clk);
 	}
 
 	pm_runtime_mark_last_busy(i2c->dev);
@@ -953,9 +937,9 @@ static int spacemit_i2c_probe(struct platform_device *pdev)
 	if (ret)
 		return dev_err_probe(dev, ret, "failed to request irq");
 
-	clk = devm_clk_get(dev, "func");
+	clk = devm_clk_get_enabled(dev, "func");
 	if (IS_ERR(clk))
-		return dev_err_probe(dev, PTR_ERR(clk), "failed to get func clock");
+		return dev_err_probe(dev, PTR_ERR(clk), "failed to enable func clock");
 
 	i2c->func_clk = clk;
 
@@ -964,23 +948,25 @@ static int spacemit_i2c_probe(struct platform_device *pdev)
 		return dev_err_probe(&pdev->dev, PTR_ERR(i2c->scl_clk),
 				     "failed to register scl clock\n");
 
-	clk = devm_clk_get(dev, "bus");
+	clk = devm_clk_get_enabled(dev, "bus");
 	if (IS_ERR(clk))
-		return dev_err_probe(dev, PTR_ERR(clk), "failed to get bus clock");
+		return dev_err_probe(dev, PTR_ERR(clk), "failed to enable bus clock");
 
 	i2c->bus_clk = clk;
 
-	ret = spacemit_i2c_prepare_enable_clks(i2c);
+	ret = clk_prepare_enable(i2c->scl_clk);
+	if (ret)
+		return dev_err_probe(&pdev->dev, ret, "failed to prepare and enable clock");
+
+	ret = devm_add_action_or_reset(dev, spacemit_i2c_scl_clk_disable_unprepare, i2c);
 	if (ret)
 		return dev_err_probe(&pdev->dev, ret,
-				     "failed to prepare and enable controller clocks");
+				     "failed to register cleanup action for clk disable and unprepare");
 
 	/* Get reset control */
 	i2c->resets = devm_reset_control_get_optional(dev, NULL);
-	if (IS_ERR(i2c->resets)) {
-		spacemit_i2c_disable_unprepare_clks(i2c);
+	if (IS_ERR(i2c->resets))
 		return dev_err_probe(dev, PTR_ERR(i2c->resets), "failed to get reset control");
-	}
 
 	/* Reset the I2C controller */
 	if (i2c->resets) {
@@ -990,10 +976,8 @@ static int spacemit_i2c_probe(struct platform_device *pdev)
 	}
 
 	ret = clk_set_rate(i2c->scl_clk, i2c->clock_freq);
-	if (ret) {
-		spacemit_i2c_disable_unprepare_clks(i2c);
+	if (ret)
 		return dev_err_probe(&pdev->dev, ret, "failed to set rate for SCL clock");
-	}
 
 	spacemit_i2c_reset(i2c);
 
@@ -1011,17 +995,16 @@ static int spacemit_i2c_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, i2c);
 
-	spacemit_i2c_disable_unprepare_clks(i2c);
-
 	pm_runtime_set_autosuspend_delay(dev, MSEC_PER_SEC);
 	pm_runtime_use_autosuspend(dev);
-	pm_runtime_set_suspended(dev);
+	pm_runtime_set_active(dev);
 	pm_suspend_ignore_children(dev, 1);
 	pm_runtime_enable(dev);
 
 	ret = i2c_add_numbered_adapter(&i2c->adapt);
 	if (ret) {
 		pm_runtime_disable(dev);
+		pm_runtime_set_suspended(dev);
 		return dev_err_probe(&pdev->dev, ret, "failed to add i2c adapter");
 	}
 
@@ -1034,7 +1017,8 @@ static void spacemit_i2c_remove(struct platform_device *pdev)
 
 	i2c_del_adapter(&i2c->adapt);
 
-	pm_runtime_force_suspend(i2c->dev);
+	pm_runtime_disable(i2c->dev);
+	pm_runtime_set_suspended(i2c->dev);
 
 	if (i2c->resets)
 		reset_control_assert(i2c->resets);
