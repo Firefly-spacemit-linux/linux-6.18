@@ -7,7 +7,7 @@
 	pinctrl-0 = <&ri2c1_1_cfg>;
 
 	imx415_0: imx415-0@37 {
-		compatible = "sony,imx415";
+		compatible = "sony,imx415-ff";
 		reg = <0x37>;
 		csi-id = <0>;
 		clock-names = "xclk";
