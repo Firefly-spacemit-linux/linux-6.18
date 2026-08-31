@@ -586,8 +586,18 @@ static void k1_pcie_deinit(struct dw_pcie_rp *pp)
 	struct k1_pcie *k1 = to_k1_pcie(pci);
 
 	/* Assert fundamental reset (drive PERST# low) */
+#ifdef CONFIG_SOC_SPACEMIT_K3
+	/* Assert PERST# via GPIO if available, otherwise use controller register */
+	if (k1->pci.pe_rst)
+		gpiod_set_value_cansleep(k1->pci.pe_rst, 1);
+	else
+		regmap_update_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+				   PCIE_PERSTN_OUT | PCIE_PERSTN_OE,
+				   PCIE_PERSTN_OE);
+#else
 	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
 			PCIE_RC_PERST);
+#endif
 
 #ifdef CONFIG_SOC_SPACEMIT_K3
 	spacemit_pcie_disable_phy(k1);
