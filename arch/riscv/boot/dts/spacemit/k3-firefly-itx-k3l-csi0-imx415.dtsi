@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+&r_i2c1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&ri2c1_1_cfg>;
+
+	imx415_0: imx415-0@37 {
+		compatible = "sony,imx415";
+		reg = <0x37>;
+		csi-id = <0>;
+		clock-names = "xclk";
+		clocks = <&syscon_apmu CLK_APMU_ISIM_VCLK0>;
+		pwdn-gpios = <&pca9555_2 PCA_IO0_4 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pca9555_2 PCA_IO0_5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam0_2_cfg>;
+		status = "okay";
+
+		port {
+			imx415_0_out: endpoint {
+				data-lanes = <1 2 3 4>;
+				link-frequencies = /bits/ 64 <742500000>;
+				remote-endpoint = <&ccic0_in>;
+			};
+		};
+	};
+};
+
+&csiphy0 {
+        status = "okay";
+};
+
+&ccic0 {
+        status = "okay";
+};
+
+&ccic0_in {
+	remote-endpoint = <&imx415_0_out>;
+};
+
+&pinctrl {
+	cam0-2-cfg {
+		cam1-0-pins {
+			pinmux = <K3_PADCONF(75, 2)>;	/* cam0 clk */
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <1800>;
+		};
+	};
+};

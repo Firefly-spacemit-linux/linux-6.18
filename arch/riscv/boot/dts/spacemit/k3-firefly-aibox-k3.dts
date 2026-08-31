@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /* Copyright (c) 2025 Spacemit, Inc */
 
+#define FF_RPMI_IFX // K3-COM260 must define this
 #define FF_DP1
 #define FF_GMAC0
 #define FF_GMAC1

@@ -1,0 +1,1666 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#include "k3-firefly-common.dtsi"
+
+#ifdef FF_HDMI0
+#include "k3-dp0.dtsi"
+#endif
+
+#ifdef FF_DP1
+#include "k3-dp1.dtsi"
+#endif
+
+/ {
+	// power for vcc5v0_sys / vcc5v0_usb / vcc3v3_sys
+	vcc_sys_pwr: vcc-sys-pwr-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_sys_pwr";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		status = "okay";
+	};
+
+ 	vcc5v0_usb: vcc5v0-usb {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc12v_dcin>;
+ 	};
+
+ 	vcc3v3_sys: vcc3v3-sys {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc3v3_sys";
+                regulator-min-microvolt = <3300000>;
+                regulator-max-microvolt = <3300000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc12v_dcin>;
+ 	};
+
+ 	vcc1v8_sys: vcc1v8-sys {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc1v8_sys";
+                regulator-min-microvolt = <1800000>;
+                regulator-max-microvolt = <1800000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc3v3_sys>;
+ 	};
+
+#ifdef FF_USB30_TYPEA
+ 	vcc5v0_usb30_host0: vcc5v0-usb30-host0-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb30_host0";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc5v0_usb>;
+ 	};
+
+ 	vcc5v0_usb30_host1: vcc5v0-usb30-host1-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb30_host1";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(127) GPIO_ACTIVE_HIGH>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&usb30_vcc5v0_en0_cfg>;
+		vin-supply = <&vcc5v0_usb>;
+                status = "okay";
+ 	};
+
+ 	vcc5v0_usb30_host2: vcc5v0-usb30-host2-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb30_host2";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc5v0_usb>;
+ 	};
+
+ 	vcc5v0_usb30_host3: vcc5v0-usb30-host3-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb30_host3";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(108) GPIO_ACTIVE_HIGH>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&usb30_vcc5v0_en1_cfg>;
+		vin-supply = <&vcc5v0_usb>;
+                status = "okay";
+ 	};
+
+	usb1_1v05: usb1-1v05-regulator {
+		status = "okay";
+		compatible = "regulator-fixed";
+		regulator-name = "usb1_1v05";
+		regulator-min-microvolt = <1050000>;
+		regulator-max-microvolt = <1050000>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+		gpios = <&pca9555_ri2c1 PCA_IO1_1 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&vcc5v0_sys>;
+	};
+#endif
+
+#ifdef FF_USB20_TYPEA
+ 	vcc5v0_usb20_host1: vcc5v0-usb20-host1-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb20_host1";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(87) GPIO_ACTIVE_HIGH>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&usb20_host0_pwren_cfg>;
+		vin-supply = <&vcc5v0_usb>;
+                status = "okay";
+ 	};
+
+ 	vcc5v0_usb20_host2: vcc5v0-usb20-host2-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb20_host2";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc5v0_usb>;
+ 	};
+
+ 	vcc5v0_usb20_host3: vcc5v0-usb20-host3-regulator {
+  		compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_usb20_host3";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                regulator-always-on;
+                regulator-boot-on;
+		vin-supply = <&vcc5v0_usb>;
+ 	};
+#endif
+
+
+#ifdef FF_PCIE_SSD
+	pciec_or_gamc3_sel: pciec-or-gmac3-sel {
+		compatible = "regulator-fixed";
+		regulator-name = "pciec_or_gamc3_sel";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&gpio K3_GPIO(78) GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&pciec_or_gmac3_sel_cfg>;
+                pinctrl-names = "default";
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_GMAC3
+	pciec_or_gamc3_sel: pciec-or-gmac3-sel {
+		compatible = "regulator-fixed";
+		regulator-name = "pciec_or_gamc3_sel";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-low;
+		gpio = <&gpio K3_GPIO(78) GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&pciec_or_gmac3_sel_cfg>;
+                pinctrl-names = "default";
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_TYPE_C
+        vcc5v0_vbus: vcc5v0-vbus-regulator {
+                compatible = "regulator-fixed";
+                regulator-name = "vcc5v0_vbus";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(104) GPIO_ACTIVE_HIGH>;
+                pinctrl-0 = <&typec5v_pwren_cfg>;
+                pinctrl-names = "default";
+		vin-supply = <&vcc5v0_usb>;
+                status = "okay";
+        };
+
+#endif
+
+#ifdef FF_LEDS
+	firefly_leds: firefly-leds {
+		status = "okay";
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&work_led_cfg>;
+
+		power_led: power {
+			label = ":power"; 
+			default-state = "on";
+			linux,default-trigger = "ir-power-click";
+			gpios = <&gpio K3_GPIO(81) GPIO_ACTIVE_HIGH>;
+		};
+
+		user_led: user {
+			label = ":user"; 
+			default-state = "off";
+			linux,default-trigger = "ir-user-click";
+			gpios = <&pca9555_ri2c1 PCA_IO1_3 GPIO_ACTIVE_HIGH>;
+		};
+	};
+#endif
+
+#ifdef FF_KEY
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&boot_key_cfg>;
+
+		button-boot {
+			label = "boot";
+			linux,code = <KEY_F12>;
+			gpios = <&gpio K3_GPIO(69) GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+	};
+#endif
+
+#ifdef FF_SATA_SSD
+	// ASW3810_SEL L --> SATA
+	pcie_or_sata_sel: pcie-or-sata-sel {
+		compatible = "regulator-fixed";
+		regulator-name = "pcie_or_sata_sel";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-low;
+		gpios = <&pca9555_ri2c1 PCA_IO1_0 GPIO_ACTIVE_LOW>;
+		status = "okay";
+	};
+
+	vcc25_64_sata: vcc25-64-sata {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc25_64_sata";
+		regulator-min-microvolt = <2500000>;
+		regulator-max-microvolt = <2500000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpios = <&pca9555_ri2c1 PCA_IO1_4 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+#else
+	// ASW3810_SEL H --> PCIEX16_SLOT
+	pcie_or_sata_sel: pcie-or-sata-sel {
+		compatible = "regulator-fixed";
+		regulator-name = "pcie_or_sata_sel";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpios = <&pca9555_ri2c1 PCA_IO1_0 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_WIFI_BT
+	rfkill_pcie_wlan: rfkill-pcie-wlan {
+		compatible = "rfkill-gpio";
+		label = "rfkill-pcie-wlan";
+		radio-type = "wlan";
+		shutdown-gpios = <&pca9555_2 PCA_IO1_6 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
+	rfkill_m2_bt: rfkill-m2-bt {
+		compatible = "rfkill-gpio";
+		label = "rfkill-m2-bt";
+		radio-type = "bluetooth";
+		shutdown-gpios = <&pca9555_2 PCA_IO1_7 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_SDCARD
+        vcc3v3_sd: vcc3v3-sd {
+                compatible = "regulator-fixed";
+                regulator-name = "vcc3v3_sd";
+                regulator-min-microvolt = <3300000>;
+                regulator-max-microvolt = <3300000>;
+                enable-active-high;
+                gpio = <&gpio K3_GPIO(103) GPIO_ACTIVE_HIGH>;
+                pinctrl-0 = <&sdmmc_pwren_cfg>;
+                pinctrl-names = "default";
+                status = "okay";
+        };
+#endif
+
+#ifdef FF_USB30_TYPEA
+#ifdef FF_4G_5G_MODULE
+	vcc3v5_4g: vcc3v5-4g {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v5_4g";
+		regulator-min-microvolt = <3500000>;
+		regulator-max-microvolt = <3500000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&gpio K3_GPIO(33) GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+#endif
+#endif
+
+#ifdef FF_USB30_TYPEA
+#ifdef FF_USB30_FRONT
+	p5v_usb_rear5: p5v-usb-rear5 {
+		compatible = "regulator-fixed";
+		regulator-name = "p5v_usb_rear5";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&gpio K3_GPIO(105) GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&usb30_front_pwren_cfg>;
+                pinctrl-names = "default";
+		vin-supply = <&vcc5v0_usb>;
+		status = "okay";
+	};
+
+	p5v_usb_rear6: p5v-usb-rear6 {
+		compatible = "regulator-fixed";
+		regulator-name = "p5v_usb_rear6";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vcc5v0_usb>;
+	};
+#endif
+#endif
+};
+
+#ifdef FF_PCA9555_1
+&r_i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ri2c1_1_cfg>;
+	status = "okay";
+
+	pca9555_ri2c1: gpio@20 {
+		compatible = "nxp,pca9555";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-group-num = <300>;
+		status = "okay";
+	};
+};
+#endif
+
+&i2c6 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c6_0_cfg>;
+	status = "okay";
+
+	eeprom_i2c6: eeprom-i2c6@50 {
+		compatible = "atmel,24c02";
+		reg = <0x50>;
+		//read-only;
+		status = "okay";
+
+		nvmem-layout {
+			compatible = "onie,tlv-layout";
+
+			product_name_i2c6: product-name {
+			};
+		};
+	};
+
+#ifdef FF_FAN
+	ctf2301: ctf2301@4c {
+		compatible = "sensylink,ctf2301";
+		reg = <0x4c>;
+		#cooling-cells = <2>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_RTC
+	hym8563: hym8563@51 {
+		compatible = "haoyu,hym8563";
+		reg = <0x51>;
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "hym8563";
+		pinctrl-names = "default";
+		pinctrl-0 = <&hym8563_int_cfg>;
+		interrupt-parent = <&gpio>;
+		interrupts = <K3_GPIO(41) IRQ_TYPE_LEVEL_LOW>;
+		wakeup-source;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_WATCHDOG
+	// watch dog on mother base
+	pc9202_base: pc9202_base@3c {
+		compatible = "firefly,pc9202";
+		reg = <0x3c>;
+		index = <0>;
+		driver-names = "wdt_ctrl";
+		status = "okay";
+	};
+#endif
+};
+
+&i2c4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c4_3_cfg>;
+	status = "okay";
+
+#ifdef FF_PCA9555_2
+	pca9555_2: gpio@20 {
+		compatible = "nxp,pca9555";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-group-num = <200>;
+		interrupt-parent = <&gpio>;
+		interrupts = <K3_GPIO(110) IRQ_TYPE_EDGE_FALLING>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pca9555_int2_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_HDMI0
+	lt2404: lt2404@29 {
+		compatible = "lontium,lt2404";
+		reg = <0x29>;
+		power-gpios = <&pca9555_ri2c1 PCA_IO1_2 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio K3_GPIO(107) GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&lt2404_rst>;
+		pinctrl-names = "default";
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_ES8390
+	es8390: es8390@10 {
+		compatible = "everest,es8389";
+		reg = <0x10>;
+		#sound-dai-cells = <0>;
+		/* spk-ctl-gpio = <&gpio K3(100) GPIO_ACTIVE_HIGH>; */
+		clocks = <&syscon_mpmu CLK_MPMU_I2S1_SYSCLK>;
+		clock-names = "mclk";
+		status = "okay";
+		//status = "disabled";
+	};
+#endif
+};
+
+&i2c2 {
+	status = "disabled";
+};
+
+&eeprom {
+	status = "disabled";
+};
+
+#ifdef FF_RTC
+// only use hym8563 rtc
+&rpmi_rtc {
+	status = "disabled";
+};
+#endif
+
+#ifdef FF_UART0
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_0_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_SPI_NOR
+&qspi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&qspi_cfg>, <&qspi_cs0_cfg>;
+	status = "okay";
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <26500000>;
+		m25p,fast-read;
+		broken-flash-reset;
+		status = "okay";
+	};
+};
+#endif
+
+#ifdef FF_SDCARD
+&sdcard {
+	pinctrl-names = "default","uhs","debug";
+	pinctrl-0 = <&mmc1_cfg &mmc1_cd_cfg>;
+	pinctrl-1 = <&mmc1_uhs_cfg &mmc1_cd_cfg>;
+	pinctrl-2 = <&mmc1_jtag_cfg &mmc1_cd_cfg>;
+	bus-width = <4>;
+	wp-inverted;
+	cd-gpios = <&gpio K3_GPIO(86) GPIO_ACTIVE_LOW>;
+	vmmc-supply = <&vcc3v3_sd>;
+	vqmmc-supply = <&aldo1>;
+	no-mmc;
+	no-sdio;
+	clock-frequency = <204800000>;
+	spacemit,tx_delaycode = <0x1f>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PCIE_SSD
+&phy2 {
+	status = "okay";
+};
+
+&phy3 {
+	status = "okay";
+};
+
+&pcie2_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie2_2_cfg>;
+	phys = <&phy2>, <&phy3>;
+	phy-names = "phy2", "phy3";
+
+	num-lanes = <2>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_SATA_SSD
+&phy1 {
+	status = "okay";
+};
+
+&pcie1_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie1_2_cfg>;
+	phys = <&phy1>;
+	phy-names = "phy1";
+
+	num-lanes = <2>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PCIEX16_SLOT
+#ifndef FF_SATA_SSD
+// pcie3.0x4lane
+&phy0 {
+	status = "okay";
+};
+
+&phy1 {
+	status = "okay";
+};
+
+&pcie0_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_1_cfg>;
+	phys = <&phy0>, <&phy1>;
+	phy-names = "phy0", "phy1";
+
+	num-lanes = <4>;
+	status = "okay";
+};
+
+#else
+// pcie3.0x2lane
+&phy0 {
+	status = "okay";
+};
+
+&pcie0_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_1_cfg>;
+	phys = <&phy0>;
+	phy-names = "phy0";
+
+	num-lanes = <2>;
+	status = "okay";
+};
+#endif
+#endif
+
+&ec_master {
+	status = "okay";
+};
+
+#ifdef FF_GMAC0
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac0_cfg>;
+
+	max-speed = <1000>;
+	tx-fifo-depth = <8192>;
+	rx-fifo-depth = <8192>;
+	snps,tso;
+	snps,force_sf_dma_mode;
+	phy-mode = "rgmii";
+	phy-handle = <&gmac0_phy>;
+	snps,reset-gpios = <&gpio K3_GPIO(20) GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 20000 100000>;
+
+	spacemit,wake-irq-enable;
+
+	spacemit,clk-tuning-enable;
+	spacemit,clk-tuning-by-delayline;
+	spacemit,tx-phase = <65>;
+	spacemit,rx-phase = <50>;
+
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		gmac0_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id001c.c916",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+			device_type = "ethernet-phy";
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				led@1 {
+					reg = <1>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+				};
+
+				led@2 {
+					reg = <2>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+				};
+			};
+		};
+	};
+};
+#endif
+
+#ifdef FF_GMAC1
+&eth1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac1_cfg>;
+
+	max-speed = <1000>;
+	tx-fifo-depth = <8192>;
+	rx-fifo-depth = <8192>;
+	snps,tso;
+	snps,force_sf_dma_mode;
+	phy-mode = "rgmii";
+	phy-handle = <&gmac1_phy>;
+	snps,reset-gpios = <&gpio K3_GPIO(37) GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 20000 100000>;
+
+	spacemit,wake-irq-enable;
+
+	spacemit,clk-tuning-enable;
+	spacemit,clk-tuning-by-delayline;
+	spacemit,tx-phase = <47>;
+	spacemit,rx-phase = <53>;
+
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		gmac1_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id001c.c916",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+			device_type = "ethernet-phy";
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				led@1 {
+					reg = <1>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+				};
+
+				led@2 {
+					reg = <2>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+				};
+			};
+		};
+	};
+};
+#endif
+
+#ifdef FF_GMAC2
+&eth2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac2_cfg>;
+
+	max-speed = <1000>;
+	tx-fifo-depth = <8192>;
+	rx-fifo-depth = <8192>;
+	snps,tso;
+	snps,force_sf_dma_mode;
+	phy-mode = "rgmii";
+	phy-handle = <&gmac2_phy>;
+	snps,reset-gpios = <&gpio K3_GPIO(57) GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 20000 100000>;
+
+	spacemit,wake-irq-enable;
+
+	spacemit,clk-tuning-enable;
+	spacemit,clk-tuning-by-delayline;
+	spacemit,tx-phase = <53>;
+	spacemit,rx-phase = <52>;
+
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		gmac2_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id001c.c916",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+			device_type = "ethernet-phy";
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				led@1 {
+					reg = <1>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+				};
+
+				led@2 {
+					reg = <2>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+				};
+			};
+		};
+	};
+};
+#endif
+
+#ifdef FF_GMAC3
+&eth3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac3_cfg>;
+
+	max-speed = <1000>;
+	tx-fifo-depth = <4096>;
+	rx-fifo-depth = <4096>;
+	snps,tso;
+	snps,force_sf_dma_mode;
+	phy-mode = "rgmii";
+	phy-handle = <&gmac3_phy>;
+	snps,reset-gpios = <&gpio K3_GPIO(36) GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 20000 100000>;
+
+	spacemit,wake-irq-enable;
+
+	spacemit,clk-tuning-enable;
+	spacemit,clk-tuning-by-delayline;
+	spacemit,tx-phase = <51>;
+	spacemit,rx-phase = <54>;
+
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		gmac3_phy: ethernet-phy@1 {
+			compatible = "ethernet-phy-id001c.c916",
+				     "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+			device_type = "ethernet-phy";
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				led@1 {
+					reg = <1>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+				};
+
+				led@2 {
+					reg = <2>;
+					function = LED_FUNCTION_LAN;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+				};
+			};
+		};
+	};
+};
+#endif
+
+&r_i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ri2c0_3_cfg>;
+	status = "okay";
+
+#ifdef FF_TYPE_C
+	usbc0: husb311@4e {
+		compatible = "hynetek,husb311";
+		reg = <0x4e>;
+		interrupt-parent = <&gpio>;
+		interrupts = <K3_GPIO(38) IRQ_TYPE_EDGE_FALLING>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usbc0_int_cfg>;
+		vbus-supply = <&vcc5v0_vbus>;
+		status = "okay";
+
+		usb_con: connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			data-role = "dual";
+			power-role = "dual";
+			try-power-role = "sink";
+			op-sink-microwatt = <1000000>;
+			sink-pdos =
+				<PDO_FIXED(5000, 1000, PDO_FIXED_USB_COMM)>;
+			source-pdos =
+				<PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					usbc0_role_sw: endpoint@0 {
+						remote-endpoint = <&dwc3_0_role_switch>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					usbc0_orien_sw: endpoint {
+						remote-endpoint = <&u2phy0_orientation_switch>;
+					};
+				};
+			};
+
+		};
+	};
+#endif
+};
+
+
+#ifdef FF_TYPE_C
+&usb3_porta_u2phy {
+	status = "okay";
+};
+
+&usb3_porta_u3phy {
+	status = "okay";
+
+	orientation-switch;
+
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		u2phy0_orientation_switch: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&usbc0_orien_sw>;
+		};
+	};
+
+};
+
+&usb3_porta {
+	dr_mode = "otg";
+	usb-role-switch;
+	role-switch-default-mode = "peripheral";
+	monitor-vbus;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0x0>;
+			dwc3_0_role_switch: endpoint {
+				remote-endpoint = <&usbc0_role_sw>;
+			};
+		};
+	};
+};
+#endif
+
+#ifdef FF_USB30_TYPEA
+&pcie4_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ff_pcie4_1_cfg>;
+	phys = <&phy5>;
+	phy-names = "phy5";
+
+	num-lanes = <1>;
+	status = "okay";
+};
+
+&phy5 {
+	status = "okay";
+};
+#endif
+
+#ifdef FF_HDMI0
+&dp0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&dp0_2_cfg>;
+	status = "okay";
+};
+
+&dpu0_crtc0 {
+	memory-region = <&dpu_resv0>;
+	status = "okay";
+};
+
+&adma2 {
+	status = "okay";
+};
+
+&ri2s2 {
+	status = "okay";
+};
+
+&sound_card_dp0 {
+	status = "okay";
+	simple-audio-card,name = "snd-hdmi0";
+	simple-audio-card,mclk-fs = <512>;
+	simple-audio-card,dai-link@0 {
+		format = "left_j";
+		frame-master = <&dp0_link_cpu>;
+		bitclock-master = <&dp0_link_cpu>;
+		dp0_link_codec: codec {
+			playback-only;
+			sound-dai = <&dp0>;
+		};
+	};
+};
+#endif
+
+#ifdef FF_DP1
+&dpu1_crtc0 {
+	memory-region = <&dpu_resv1>;
+	status = "okay";
+};
+
+&dp1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&dp1_4_cfg>;
+	status = "okay";
+};
+
+&adma3 {
+	status = "okay";
+};
+
+&ri2s3 {
+	status = "okay";
+};
+
+&sound_card_dp1 {
+	status = "okay";
+	simple-audio-card,name = "snd-dp1";
+	simple-audio-card,mclk-fs = <512>;
+	simple-audio-card,dai-link@0 {
+		format = "left_j";
+		frame-master = <&dp1_link_cpu>;
+		bitclock-master = <&dp1_link_cpu>;
+		dp1_link_codec: codec {
+			playback-only;
+			sound-dai = <&dp1>;
+		};
+	};
+};
+#endif
+
+#ifdef FF_WIFI_BT
+// WIFI
+&phy4 {
+	status = "okay";
+};
+
+&pcie3_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie3_2_cfg>;
+	phys = <&phy4>;
+	phy-names = "phy4";
+
+	num-lanes = <1>;
+	status = "okay";
+};
+
+// BT portb usb2.0
+&usb3_portb_u2phy {
+	status = "okay";
+};
+
+&usb3_portb_u3phy {
+	status = "disabled";
+};
+
+&usb3_portb {
+	// First, delete the pre-configured dual PHY references in the SoC DTSI, then reconfigure it for USB 2.0 PHY only.
+        /delete-property/ phys;
+        /delete-property/ phy-names;
+        maximum-speed = "high-speed";
+        phys = <&usb3_portb_u2phy>;
+        phy-names = "usb2-phy";
+        reset-on-resume;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_USB20_TYPEA
+&usb2_host_u2phy {
+	status = "okay";
+};
+
+&usb2_host {
+	status = "okay";
+};
+
+// portc usb2.0
+&usb3_portc_u2phy {
+	status = "okay";
+};
+
+&usb3_portc_u3phy {
+	status = "disabled";
+};
+
+&usb3_portc {
+	// First, delete the pre-configured dual PHY references in the SoC DTSI, then reconfigure it for USB 2.0 PHY only.
+        /delete-property/ phys;
+        /delete-property/ phy-names;
+        maximum-speed = "high-speed";
+        phys = <&usb3_portc_u2phy>;
+        phy-names = "usb2-phy";
+        reset-on-resume;
+	status = "okay";
+};
+
+// portd usb2.0
+&usb3_portd_u2phy {
+	status = "okay";
+};
+
+&usb3_portd_u3phy {
+	status = "disabled";
+};
+
+&usb3_portd {
+	// First, delete the pre-configured dual PHY references in the SoC DTSI, then reconfigure it for USB 2.0 PHY only.
+        /delete-property/ phys;
+        /delete-property/ phy-names;
+        maximum-speed = "high-speed";
+        phys = <&usb3_portd_u2phy>;
+        phy-names = "usb2-phy";
+        reset-on-resume;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS232_1
+&r_uart3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ruart3_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS232_2
+&uart9 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ff_uart9_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS485_1
+&uart6 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart6_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS485_2
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ff_uart1_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_CAN_1
+&flexcan4 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&can4_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_CAN_2
+&r_flexcan0 {
+	clock-frequency = <80000000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&rcan0_1_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_ES8390
+&i2s1 {
+	pinctrl-0 = <&sspa1_0_cfg>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&sound_card1 {
+	status = "okay";
+	simple-audio-card,name = "snd-es8390";
+	simple-audio-card,mclk-fs = <256>;
+	simple-audio-card,dai-link@0 {
+		format = "i2s";
+		frame-master = <&link1_cpu>;
+		bitclock-master = <&link1_cpu>;
+
+		link1_cpu: cpu {
+			sound-dai = <&i2s1>;
+		};
+
+		link1_codec: codec {
+			sound-dai = <&es8390>;
+		};
+	};
+};
+#endif
+
+#ifdef FF_KEY
+&rpmi_pwrkey {
+	status = "okay";
+};
+#endif
+
+&pinctrl {
+	i2c0-0-cfg {
+		i2c0-0-pins {
+			power-source = <1800>;
+		};
+	};
+
+	i2c1-1-cfg {
+		i2c1-0-pins {
+			power-source = <1800>;
+		};
+	};
+
+	i2c3-2-cfg {
+		i2c3-0-pins {
+			power-source = <3300>;
+		};
+	};
+
+	i2c4-3-cfg {
+		i2c4-0-pins {
+			power-source = <3300>;
+		};
+	};
+
+	i2c5-2-cfg {
+		i2c5-0-pins {
+			power-source = <3300>;
+		};
+	};
+
+	i2c6-0-cfg {
+		i2c6-0-pins {
+			power-source = <1800>;
+		};
+	};
+
+	ri2c0-3-cfg {
+		ri2c0-0-pins {
+			bias-disable;			/* normal bias disable */
+			power-source = <3300>;
+		};
+	};
+
+	ri2c1-1-cfg {
+		ri2c1-0-pins {
+			bias-disable;			/* normal bias disable */
+			power-source = <1800>;
+		};
+	};
+
+#ifdef FF_LEDS
+	work_led_cfg: work-led-cfg {
+		work-led-pin {
+			pinmux = <K3_PADCONF(81, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_HDMI0
+	lt2404_rst: lt2404-rst {
+		lt2404-rst-pin {
+			pinmux = <K3_PADCONF(107, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIE_SSD
+	pciec_or_gmac3_sel_cfg: pciec-or-gmac3-sel-cfg {
+		pciec-or-gmac3-sel-pin {
+			pinmux = <K3_PADCONF(78, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+
+	pcie2-2-cfg {
+		pcie2-0-pins {
+			pinmux = <K3_PADCONF(58, 4)>,	/* pcie2 perst */
+				 <K3_PADCONF(59, 4)>,	/* pcie2 wake */
+				 <K3_PADCONF(60, 4)>;	/* pcie2 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIEX16_SLOT
+	pcie0-1-cfg {
+		pcie0-0-pins {
+			pinmux = <K3_PADCONF(79, 5)>,	/* pcie0 perst */
+				 <K3_PADCONF(80, 5)>;	/* pcie0 wake */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_SPI_NOR
+	qspi-cfg {
+		qspi-pins {
+			power-source = <1800>;
+		};
+	};
+
+	qspi-cs0-cfg {
+		qspi-cs0-pins {
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_USB30_TYPEA
+	ff_pcie4_1_cfg: ff-pcie4-1-cfg {
+		pcie4-0-pins {
+			pinmux = <K3_PADCONF(76, 5)>;	/* pcie4 perst */
+        
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+			
+		};
+	};
+
+	usb30_vcc5v0_en0_cfg: usb30-vcc5v0-en0-cfg {
+		pinmux = <K3_PADCONF(127, 0)>;
+
+		bias-disable;			/* normal bias disable */
+		drive-strength = <25>;		/* DS8 */
+		power-source = <3300>;
+	};
+
+	usb30_vcc5v0_en1_cfg: usb30-vcc5v0-en1-cfg {
+		pinmux = <K3_PADCONF(108, 0)>;
+
+		bias-disable;			/* normal bias disable */
+		drive-strength = <25>;		/* DS8 */
+		power-source = <3300>;
+	};
+#endif
+
+#ifdef FF_USB20_TYPEA
+	usb20_host0_pwren_cfg: usb20-host0-pwren-cfg {
+		pinmux = <K3_PADCONF(87, 0)>;
+
+		bias-disable;			/* normal bias disable */
+		drive-strength = <25>;		/* DS8 */
+		power-source = <3300>;
+	};
+#endif
+
+#ifdef FF_TYPE_C
+	typec5v_pwren_cfg: typec5v-pwren-cfg {
+		typec5v-pwren-pin {
+			pinmux = <K3_PADCONF(104, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+
+	usbc0_int_cfg: usbc0-int-cfg {
+		usbc0-int-pin {
+			pinmux = <K3_PADCONF(38, 0)>;
+
+			bias-pull-up;			/* normal pull-up */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_RTC
+	hym8563_int_cfg: hym8563-int-cfg {
+		hym8563-int-pin {
+			pinmux = <K3_PADCONF(41, 0)>;
+
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_KEY
+	boot_key_cfg: boot-key-cfg {
+		boot-key-pin {
+			pinmux = <K3_PADCONF(69, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_WIFI_BT
+	pcie3-2-cfg {
+		pcie3-0-pins {
+			pinmux = <K3_PADCONF(124, 3)>,	/* pcie3 perst */
+				 <K3_PADCONF(125, 3)>,	/* pcie3 wake */
+				 <K3_PADCONF(126, 3)>;	/* pcie3 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_SATA_SSD
+	pcie1-2-cfg {
+		pcie1-0-pins {
+			pinmux = <K3_PADCONF(113, 5)>;	/* pcie1 perst */
+				 //<K3_PADCONF(114, 5)>;	/* pcie1 wake */
+				 //<K3_PADCONF(115, 5)>;	/* pcie1 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_SDCARD
+	sdmmc_pwren_cfg: sdmmc-pwren-cfg {
+		sdmmc-pwren-pin {
+			pinmux = <K3_PADCONF(103, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+
+	mmc1_cd_cfg: mmc1-cd-cfg {
+		mmc1-cd-pins {
+			pinmux = <K3_PADCONF(86, 0)>;	/* cd gpio */
+
+			bias-pull-up = <1>;
+			drive-strength = <8>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_GMAC0
+	gmac0-cfg {
+		/delete-node/ gmac0-2-pins;
+		/delete-node/ gmac0-4-pins;
+		/delete-node/ gmac0-5-pins;
+
+		gmac0-0-pins {
+			power-source = <1800>;
+		};
+
+		gmac0-1-pins {
+			power-source = <1800>;
+		};
+
+		gmac0-3-pins {
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_GMAC1
+	gmac1-cfg {
+		/delete-node/ gmac1-2-pins;
+		/delete-node/ gmac1-4-pins;
+		/delete-node/ gmac1-5-pins;
+
+		gmac1-0-pins {
+			power-source = <1800>;
+		};
+
+		gmac1-1-pins {
+			power-source = <1800>;
+		};
+
+		gmac1-3-pins {
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_GMAC2
+	gmac2-cfg {
+		/delete-node/ gmac2-3-pins;
+		/delete-node/ gmac2-4-pins;
+
+		gmac2-0-pins {
+			power-source = <1800>;
+		};
+
+		gmac2-1-pins {
+			power-source = <1800>;
+		};
+
+		gmac2-2-pins {
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_GMAC3
+	gmac3-cfg {
+		/delete-node/ gmac3-3-pins;
+		/delete-node/ gmac3-4-pins;
+
+		gmac3-0-pins {
+			power-source = <1800>;
+		};
+
+		gmac3-1-pins {
+			power-source = <1800>;
+		};
+
+		gmac3-2-pins {
+			power-source = <1800>;
+		};
+	};
+
+	pciec_or_gmac3_sel_cfg: pciec-or-gmac3-sel-cfg {
+		pciec-or-gmac3-sel-pin {
+			pinmux = <K3_PADCONF(78, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+
+#ifdef FF_RS232_1
+	ruart3-1-cfg {
+		ruart3-0-pins {
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_RS232_2
+	ff_uart9_1_cfg: ff-uart9-1-cfg {
+		ff-uart9-0-pins {
+			pinmux = <K3_PADCONF(84, 3)>,	/* uart9 tx */
+				 <K3_PADCONF(85, 3)>;	/* uart9 rx */
+
+			bias-pull-up;			/* normal pull-up */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_RS485_1
+	uart6-1-cfg {
+		uart6-0-pins {
+			power-source = <3300>;
+		};
+	};
+
+	rs485_re_de_1_cfg: rs485-re-de-1-cfg {
+		rs485-re-de-1-pin {
+			pinmux = <K3_PADCONF(118, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_RS485_2
+	ff_uart1_1_cfg: ff-uart1-1-cfg {
+		uart1-0-pins {
+			pinmux = <K3_PADCONF(120, 1)>,	/* uart1 rx */
+				 <K3_PADCONF(121, 1)>;	/* uart1 tx */
+
+			bias-pull-up;			/* normal pull-up */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+
+	rs485_re_de_2_cfg: rs485-re-de-2-cfg {
+		rs485-re-de-2-pin {
+			pinmux = <K3_PADCONF(119, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_CAN_1
+	can4-1-cfg {
+		can4-0-pins {
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_CAN_2
+	rcan0-1-cfg {
+		rcan0-0-pins {
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_PCA9555_2
+	pca9555_int2_cfg: pca9555-int2-cfg {
+		pca9555-int2-pin {
+			pinmux = <K3_PADCONF(110, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_ES8390
+	sspa1_0_cfg: sspa1-0-cfg {
+		sspa1-0-pins {
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_USB30_TYPEA
+#ifdef FF_USB30_FRONT
+	usb30_front_pwren_cfg: usb30-front-pwren-cfg {
+		usb30-front-pwren-pin {
+			pinmux = <K3_PADCONF(105, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+#endif
+#endif
+};
