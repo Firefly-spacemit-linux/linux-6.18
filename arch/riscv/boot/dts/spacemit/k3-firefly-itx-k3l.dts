@@ -33,7 +33,7 @@
 #define FF_CAN_2
 
 //default HDMI0
-#define HDMI0_OR_DSI0 0 // 1 --> HDMI0, 0 --> DSI0
+#define HDMI0_OR_DSI0 1 // 1 --> HDMI0, 0 --> DSI0
 #if HDMI0_OR_DSI0
 #define FF_HDMI0 // DP0 TO HDMI0
 #else
@@ -43,8 +43,7 @@
 //default DP1
 #define DP1_OR_DSI1 1 // 1 --> DP1, 0 --> DSI1
 #if DP1_OR_DSI1
-//#define FF_DP1
-#define MIPI_TEST
+#define FF_DP1
 #else
 #define FF_DSI1_V3
 #endif
