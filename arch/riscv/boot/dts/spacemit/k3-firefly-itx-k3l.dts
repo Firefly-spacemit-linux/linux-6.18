@@ -16,7 +16,7 @@
 #define FF_4G_5G_MODULE //need to define FF_USB30_TYPEA
 #define FF_USB30_FRONT //need to define FF_USB30_TYPEA
 #define FF_KEY
-//#define FF_ES8390
+#define FF_ES8390
 #define FF_GMAC0
 #define FF_GMAC1
 #define FF_GMAC2

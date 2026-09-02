@@ -467,15 +467,14 @@
 #endif
 
 #ifdef FF_ES8390
-	es8390: es8390@10 {
+	es8390: es8390@11 {
 		compatible = "everest,es8389";
-		reg = <0x10>;
+		reg = <0x11>;
 		#sound-dai-cells = <0>;
 		/* spk-ctl-gpio = <&gpio K3(100) GPIO_ACTIVE_HIGH>; */
-		clocks = <&syscon_mpmu CLK_MPMU_I2S1_SYSCLK>;
-		clock-names = "mclk";
+		//clocks = <&syscon_mpmu CLK_MPMU_I2S1_SYSCLK>;
+		//clock-names = "mclk";
 		status = "okay";
-		//status = "disabled";
 	};
 #endif
 };
@@ -1193,6 +1192,15 @@
 			sound-dai = <&es8390>;
 		};
 	};
+};
+
+&gpio {
+	gpio-ranges = <&pinctrl 0 0 0   6>,
+		      <&pinctrl 0 6 143 1>,
+		      <&pinctrl 0 7 7   25>,
+		      <&pinctrl 1 0 32 32>,
+		      <&pinctrl 2 0 64 32>,
+		      <&pinctrl 3 0 96 32>;
 };
 #endif
 
