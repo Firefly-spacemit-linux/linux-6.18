@@ -10,6 +10,10 @@
 #include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/err.h>
+#include <linux/interrupt.h>
+#include <linux/irq.h>
+#include <linux/irqchip/chained_irq.h>
+#include <linux/irqdomain.h>
 #include <linux/gfp.h>
 #include <linux/gpio/consumer.h>
 #include <linux/mfd/syscon.h>
@@ -135,6 +139,8 @@ struct k1_pcie {
 	void __iomem *link;
 	struct regmap *pmu;	/* Errors ignored; MMIO-backed regmap */
 	u32 pmu_off;
+	struct irq_domain	*irq_domain;
+	struct work_struct	linkup_work;
 };
 
 #ifdef CONFIG_SOC_SPACEMIT_K3
@@ -406,14 +412,111 @@ static void spacemit_pcie_disable_phy(struct k1_pcie *pcie)
 }
 #endif
 
-static irqreturn_t spacemit_pcie_irq_thread(int irq, void *data)
+static void spacemit_pcie_intx_mask_irq(struct irq_data *data)
 {
-	struct k1_pcie *k1 = data;
+	struct k1_pcie *k1 = irq_data_get_irq_chip_data(data);
+	u32 hwirq = data->hwirq;
+	u32 val;
+
+	val = readl_relaxed(k1->link + SPACEMIT_PHY_AHB_IRQENABLE_SET_INTX);
+	val &= ~FIELD_PREP(LEG_EP_INTERRUPTS, BIT(hwirq));
+	writel_relaxed(val, k1->link + SPACEMIT_PHY_AHB_IRQENABLE_SET_INTX);
+};
+
+static void spacemit_pcie_intx_unmask_irq(struct irq_data *data)
+{
+	struct k1_pcie *k1 = irq_data_get_irq_chip_data(data);
+	u32 hwirq = data->hwirq;
+	u32 val;
+
+	val = readl_relaxed(k1->link + SPACEMIT_PHY_AHB_IRQENABLE_SET_INTX);
+	val |= FIELD_PREP(LEG_EP_INTERRUPTS, BIT(hwirq));
+	writel_relaxed(val, k1->link + SPACEMIT_PHY_AHB_IRQENABLE_SET_INTX);
+};
+
+static struct irq_chip intx_irq_chip = {
+	.name			= "Spacemit-INTx",
+	.irq_mask		= spacemit_pcie_intx_mask_irq,
+	.irq_unmask		= spacemit_pcie_intx_unmask_irq
+};
+
+static int spacemit_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+				irq_hw_number_t hwirq)
+{
+	irq_set_chip_and_handler(irq, &intx_irq_chip, handle_level_irq);
+	irq_set_chip_data(irq, domain->host_data);
+
+	return 0;
+}
+
+static const struct irq_domain_ops intx_domain_ops = {
+	.map = spacemit_pcie_intx_map,
+	.xlate = pci_irqd_intx_xlate,
+};
+
+static int spacemit_pcie_init_irq_domain(struct dw_pcie_rp *pp)
+{
+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+	struct device *dev = pci->dev;
+	struct k1_pcie *k1 = to_k1_pcie(pci);
+	struct device_node *node = dev->of_node;
+	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+
+	if (!pcie_intc_node) {
+		dev_err(dev, "No PCIe Intc node found\n");
+		return -ENODEV;
+	}
+
+	k1->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+						   &intx_domain_ops, k1);
+	of_node_put(pcie_intc_node);
+	if (!k1->irq_domain) {
+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+		return -ENODEV;
+	}
+
+	return 0;
+}
+
+static void spacemit_pcie_handle_legacy_irq(struct k1_pcie *k1, u32 status)
+{
+	u32 reg;
+	u32 hwirq;
+
+	/* legacy intx*/
+	reg = FIELD_GET(LEG_EP_INTERRUPTS, status);
+
+	while(reg) {
+		hwirq = ffs(reg) - 1;
+		reg &= ~BIT(hwirq);
+		if (generic_handle_domain_irq(k1->irq_domain, hwirq) < 0) {
+			pr_err("unexpected IRQ, INT%d\n", hwirq);
+		}
+	}
+}
+
+static void spacemit_pcie_linkup_worker(struct work_struct *work)
+{
+	struct k1_pcie *k1 = container_of(work, struct k1_pcie, linkup_work);
 	struct dw_pcie_rp *pp = &k1->pci.pp;
+
+	msleep(PCIE_RESET_CONFIG_WAIT_MS);
+	/* Rescan the bus to enumerate endpoint devices */
+	pci_lock_rescan_remove();
+	pci_rescan_bus(pp->bridge->bus);
+	pci_unlock_rescan_remove();
+}
+
+static void spacemit_pcie_chained_irq_handler(struct irq_desc *desc)
+{
+	struct k1_pcie *k1 = irq_desc_get_handler_data(desc);
+	struct irq_chip *chip = irq_desc_get_chip(desc);
 	struct device *dev = k1->pci.dev;
 	u32 status0;
 	u32 status1;
 	u32 status2;
+
+	chained_irq_enter(chip, desc);
 
 	status0 = readl_relaxed(k1->link + SPACEMIT_PHY_AHB_IRQSTATUS_INTX);
 	status1 = readl_relaxed(k1->link + INTR_STATUS);
@@ -424,18 +527,17 @@ static irqreturn_t spacemit_pcie_irq_thread(int irq, void *data)
 	writel_relaxed(status2, k1->link + ADDR_INTR_STATUS1);
 
 	if (FIELD_GET(RDLH_LINK_UP_INT, status1)) {
-		msleep(PCIE_RESET_CONFIG_WAIT_MS);
 		dev_dbg(dev, "Received Link up event. Starting enumeration!\n");
-		/* Rescan the bus to enumerate endpoint devices */
-		pci_lock_rescan_remove();
-		pci_rescan_bus(pp->bridge->bus);
-		pci_unlock_rescan_remove();
+		schedule_work(&k1->linkup_work);
+	} else if (FIELD_GET(LEG_EP_INTERRUPTS, status0)) {
+		dev_dbg(dev, "Received legacy interrupt event. status0=0x%08x\n", status0);
+		spacemit_pcie_handle_legacy_irq(k1, status0);
 	} else if (!status0 && !status1 && !status2)
 		dev_WARN_ONCE(dev, 1,
 			      "Received unknown event. status0=0x%08x status1=0x%08x status2=0x%08x\n",
 			      status0, status1, status2);
 
-	return IRQ_HANDLED;
+	chained_irq_exit(chip, desc);
 }
 
 static irqreturn_t spacemit_pcie_wakeup_irq_thread(int irq, void *data)
@@ -684,6 +786,7 @@ static void k1_pcie_stop_link(struct dw_pcie *pci)
 	val &= ~PCIE_INTERRUPT_EN;
 	writel_relaxed(val, k1->link + K1_PHY_AHB_IRQ_EN);
 
+	writel_relaxed(0, k1->link + SPACEMIT_PHY_AHB_IRQENABLE_SET_INTX);
 	writel_relaxed(0, k1->link + INTR_ENABLE);
 
 	/* Disable the link and hold the PHY in reset */
@@ -1163,6 +1266,8 @@ static int k1_pcie_probe(struct platform_device *pdev)
 
 	k1_pcie_clear_irq_status(k1);
 
+	spacemit_pcie_init_irq_domain(pp);
+
 	ret = dw_pcie_host_init(&k1->pci.pp);
 	if (ret) {
 		dev_err(dev, "failed to initialize host\n");
@@ -1176,15 +1281,11 @@ static int k1_pcie_probe(struct platform_device *pdev)
 		goto err_host_deinit;
 	}
 
+	INIT_WORK(&k1->linkup_work, spacemit_pcie_linkup_worker);
 	if (irq > 0) {
-		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
-						spacemit_pcie_irq_thread,
-						IRQF_ONESHOT, name, k1);
-		if (ret) {
-			dev_err_probe(&pdev->dev, ret,
-				      "Failed to request PCIe IRQ\n");
-			goto err_host_deinit;
-		}
+		irq_set_chained_handler_and_data(irq,
+					 spacemit_pcie_chained_irq_handler,
+					 k1);
 	}
 
 	name = devm_kasprintf(dev, GFP_KERNEL, "spacemit_pcie_rc_wakeup%d",
@@ -1242,6 +1343,7 @@ static void k1_pcie_remove(struct platform_device *pdev)
 	}
 
 	dw_pcie_host_deinit(&k1->pci.pp);
+	cancel_work_sync(&k1->linkup_work);
 }
 
 static const struct of_device_id k1_pcie_of_match_table[] = {
