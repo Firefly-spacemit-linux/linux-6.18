@@ -31,6 +31,7 @@
 #define FF_RS485_2 // UART1
 #define FF_CAN_1
 #define FF_CAN_2
+#define FF_DP1
 
 //default HDMI0
 #define HDMI0_OR_DSI0 1 // 1 --> HDMI0, 0 --> DSI0
@@ -38,14 +39,6 @@
 #define FF_HDMI0 // DP0 TO HDMI0
 #else
 #define FF_DSI0_V3
-#endif
-
-//default DP1
-#define DP1_OR_DSI1 1 // 1 --> DP1, 0 --> DSI1
-#if DP1_OR_DSI1
-#define FF_DP1
-#else
-#define FF_DSI1_V3
 #endif
 
 //default GMAC3
@@ -91,14 +84,7 @@
 #ifdef FF_DSI0_V3
 #ifdef FF_PCA955X
 #include "lcd_dsi_panel.dtsi"
-//#include "k3-firefly-itx-k3l-dsi0-mipi101-BSD1218-A101KL68.dtsi"
-#endif
-#endif
-
-#ifdef FF_DSI1_V3
-#ifdef FF_PCA955X
-#include "lcd_dsi_panel.dtsi"
-#include "k3-firefly-itx-k3l-dsi1-mipi101-BSD1218-A101KL68.dtsi"
+#include "k3-firefly-itx-k3l-dsi0-mipi101-BSD1218-A101KL68.dtsi"
 #endif
 #endif
 
