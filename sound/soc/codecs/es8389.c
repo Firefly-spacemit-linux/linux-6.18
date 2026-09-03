@@ -635,7 +635,7 @@ static int es8389_set_bias_level(struct snd_soc_component *component,
 		usleep_range(70000, 72000);
 		regmap_write(es8389->regmap, ES8389_ANA_CTL1, 0x59);
 		regmap_write(es8389->regmap, ES8389_ADC_EN, 0x00);
-		regmap_write(es8389->regmap, ES8389_CLK_OFF1, 0x00);
+		regmap_write(es8389->regmap, ES8389_CLK_OFF1, 0x01);
 		regmap_write(es8389->regmap, ES8389_RESET, 0x3E);
 		regmap_update_bits(es8389->regmap, ES8389_DAC_INV, 0x80, 0x80);
 		usleep_range(8000, 8500);

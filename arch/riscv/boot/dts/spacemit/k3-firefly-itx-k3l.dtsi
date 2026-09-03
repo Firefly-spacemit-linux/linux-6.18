@@ -472,8 +472,8 @@
 		reg = <0x11>;
 		#sound-dai-cells = <0>;
 		/* spk-ctl-gpio = <&gpio K3(100) GPIO_ACTIVE_HIGH>; */
-		//clocks = <&syscon_mpmu CLK_MPMU_I2S1_SYSCLK>;
-		//clock-names = "mclk";
+		clocks = <&syscon_mpmu CLK_MPMU_I2S1_SYSCLK>;
+		clock-names = "mclk";
 		status = "okay";
 	};
 #endif
