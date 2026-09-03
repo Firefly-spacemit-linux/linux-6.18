@@ -51,6 +51,10 @@ CROSS_COMPILE="${CROSS_COMPILE:-riscv64-unknown-linux-gnu-}"
 TOOLCHAIN_PATH="${TOOLCHAIN_PATH:-/opt/spacemit-toolchain-linux-glibc-x86_64-v1.2.2/bin}"
 DIRECT_BUILD="${DIRECT_BUILD:-0}"
 JOBS=""
+# dpkg-deb compression level for deb builds. The build container's dpkg
+# defaults to zstd level 19, which is very slow on the multi-GB dbg package
+# (measured: 461MB vmlinux, 22s vs 2s at level 8, +30% size). Overridable.
+DPKG_DEB_COMPRESSOR_LEVEL="${DPKG_DEB_COMPRESSOR_LEVEL:-8}"
 # Long-lived container: created once, reused via docker exec. Per-user and
 # per-source-tree so different checkouts/users never share a container.
 CONTAINER_NAME="${CONTAINER_NAME:-k3-bsp-$(id -u)-$(basename "$SOURCE_DIR")-$(printf '%s' "$SOURCE_DIR" | sha256sum | cut -c1-8)}"
@@ -240,9 +244,10 @@ if [[ -n "$JOBS" ]]; then
     CONTAINER_ENV+=("-e" "JOBS=$JOBS")
 fi
 
-# Forward optional FIT signing controls into the container. KERNEL_ITS needs
-# path remapping because the host and container source roots differ.
-for var in KEY_HINT MKIMAGE DTB_LIST KERNEL_IMAGE DTB_DIR; do
+# Forward optional build controls into the container. KERNEL_ITS needs path
+# remapping because the host and container source roots differ.
+# DPKG_DEB_COMPRESSOR_LEVEL is honored by dpkg-deb via dpkg-buildpackage.
+for var in KEY_HINT MKIMAGE DTB_LIST KERNEL_IMAGE DTB_DIR DPKG_DEB_COMPRESSOR_LEVEL; do
     if [[ -n "${!var:-}" ]]; then
         CONTAINER_ENV+=("-e" "$var=${!var}")
     fi
@@ -372,7 +377,7 @@ run_command() {
         if [[ -n "$KEY_DIR" ]]; then
             export KEY_DIR
         fi
-        for var in KEY_HINT MKIMAGE DTB_LIST KERNEL_IMAGE DTB_DIR KERNEL_ITS; do
+        for var in KEY_HINT MKIMAGE DTB_LIST KERNEL_IMAGE DTB_DIR KERNEL_ITS DPKG_DEB_COMPRESSOR_LEVEL; do
             if [[ -n "${!var:-}" ]]; then
                 export "$var"
             fi
