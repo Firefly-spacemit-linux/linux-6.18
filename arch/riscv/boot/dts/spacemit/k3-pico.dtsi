@@ -102,12 +102,17 @@
 		compatible = "pwm-fan";
 		pwms = <&cros_ec_pwm 0>;
 		/*
-		* Cooling states (0-8) -> PWM duty (0-255)
-		* Full speed is treated as ~6000RPM.
-		* Custom ramp to balance noise and thermals
-		*/
-		/* Keep headroom by capping max duty below 255. */
-		cooling-levels = <0 30 60 90 120 149 170 191 213>;
+		 * Cooling states 0-8 map to PWM values 0-255. Keep the fan
+		 * running at the lowest state to avoid unreliable low-duty
+		 * restarts, and reserve headroom by limiting the highest state.
+		 */
+		cooling-levels = <60 75 90 105 120 149 170 191 213>;
+		/*
+		 * Apply 40% duty for at least three seconds when starting from
+		 * a stopped state, including boot and resume.
+		 */
+		fan-stop-to-start-percent = <40>;
+		fan-stop-to-start-us = <3000000>;
 		#cooling-cells = <2>;
 	};
 
