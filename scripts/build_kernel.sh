@@ -51,11 +51,15 @@ CROSS_COMPILE="${CROSS_COMPILE:-riscv64-unknown-linux-gnu-}"
 TOOLCHAIN_PATH="${TOOLCHAIN_PATH:-/opt/spacemit-toolchain-linux-glibc-x86_64-v1.2.2/bin}"
 DIRECT_BUILD="${DIRECT_BUILD:-0}"
 JOBS=""
+# Long-lived container: created once, reused via docker exec. Per-user and
+# per-source-tree so different checkouts/users never share a container.
+CONTAINER_NAME="${CONTAINER_NAME:-k3-bsp-$(id -u)-$(basename "$SOURCE_DIR")-$(printf '%s' "$SOURCE_DIR" | sha256sum | cut -c1-8)}"
 
 CLEAN=false
 BUILD_DEB=false
 ACTION="build"
 DEBUG=false
+FORCE_RECREATE=false
 
 # Function to handle symlinks within git directory
 handle_git_internal_symlinks() {
@@ -144,12 +148,14 @@ usage() {
     echo "  -c, --clean          Clean build (CLEAN_CMD before BUILD[_DEB]_CMD)"
     echo "  -d, --deb            Build DEB packages (BUILD_DEB_CMD)"
     echo "  -h, --help           Show this help message"
+    echo "  -f, --fresh          Force recreate of the persistent container"
     echo "  -j, --jobs NUM       Number of parallel jobs (default: nproc)"
     echo "  -x, --debug          Enable debug output (show docker command)"
     echo ""
     echo "Commands (run inside container):"
     echo "  build               Build (BUILD_CMD, default)"
     echo "  shell               Interactive shell"
+    echo "  stop                Stop the persistent container (kept, not removed)"
     echo ""
     echo "Examples:"
     echo "  $(basename "$0")                    # Build in container"
@@ -168,6 +174,10 @@ while [[ $# -gt 0 ]]; do
             BUILD_DEB=true
             shift
             ;;
+        -f|--fresh)
+            FORCE_RECREATE=true
+            shift
+            ;;
         -h|--help)
             usage
             exit 0
@@ -180,7 +190,7 @@ while [[ $# -gt 0 ]]; do
             DEBUG=true
             shift
             ;;
-        build|shell)
+        build|shell|stop)
             ACTION="$1"
             shift
             ;;
@@ -290,35 +300,61 @@ create_user_files() {
 # Create user permission files
 create_user_files
 
+# Signature of the container config (mounts, env, image, user). The long-lived
+# container is recreated only when this changes.
+container_config_sig() {
+    { printf '%s\n' "${VOLUME_MOUNTS[@]}" "${CONTAINER_ENV[@]}"
+      printf '%s\n' "$SOURCE_DIR/.passwd:/etc/passwd:ro" "$SOURCE_DIR/.group:/etc/group:ro"
+      printf '%s\n' "$(id -u):$(id -g)" "$DOCKER_REPO/$IMAGE_NAME"
+    } | sha256sum | cut -c1-16
+}
+
+# Create the persistent container once, then reuse it via docker exec.
+# Creating/destroying per run costs container setup plus overlay copy-up,
+# which is painful on slow disks. -f/--fresh forces a recreate, which is
+# also needed to pick up a newly built image with the same tag.
+ensure_container() {
+    local sig existing
+    sig="$(container_config_sig)"
+    if [ "$FORCE_RECREATE" = true ] || ! docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+        docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+        echo "Creating persistent container $CONTAINER_NAME (reused across runs; stop it with '$(basename "$0") stop')"
+        docker create --name "$CONTAINER_NAME" --init \
+            --label "k3-bsp-config=$sig" \
+            "${VOLUME_MOUNTS[@]}" \
+            "${CONTAINER_ENV[@]}" \
+            -v "$SOURCE_DIR/.passwd:/etc/passwd:ro" \
+            -v "$SOURCE_DIR/.group:/etc/group:ro" \
+            -u "$(id -u):$(id -g)" \
+            "$DOCKER_REPO/$IMAGE_NAME" \
+            sleep infinity >/dev/null
+        docker start "$CONTAINER_NAME" >/dev/null
+        return
+    fi
+    existing="$(docker container inspect -f '{{ index .Config.Labels "k3-bsp-config" }}' "$CONTAINER_NAME" 2>/dev/null || true)"
+    if [ "$existing" != "$sig" ]; then
+        echo "Container $CONTAINER_NAME config changed, recreating ..."
+        docker rm -f "$CONTAINER_NAME" >/dev/null
+        ensure_container
+        return
+    fi
+    if [ "$(docker container inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null)" != "true" ]; then
+        docker start "$CONTAINER_NAME" >/dev/null
+    fi
+}
+
 # Function to run command in container
 run_in_container() {
     local cmd="$1"
+    ensure_container
+    local tty_args=()
+    [ -t 0 ] && tty_args=(-t)
     if [ "$DEBUG" = true ]; then
         echo "--- Docker/Podman full command ---"
-        local full_cmd
-        full_cmd="docker run --rm -it --init"
-        for v in "${VOLUME_MOUNTS[@]}"; do
-            full_cmd+=" $v"
-        done
-        for e in "${CONTAINER_ENV[@]}"; do
-            full_cmd+=" $e"
-        done
-        full_cmd+=" -v $SOURCE_DIR/.passwd:/etc/passwd:ro"
-        full_cmd+=" -v $SOURCE_DIR/.group:/etc/group:ro"
-        full_cmd+=" -u $(id -u):$(id -g)"
-        full_cmd+=" $DOCKER_REPO/$IMAGE_NAME"
-        full_cmd+=" bash -c \"$cmd\""
-        echo "$full_cmd"
+        echo "docker exec -i ${tty_args[*]} $CONTAINER_NAME bash -c \"$cmd\""
         echo "--- End docker command ---"
     fi
-    docker run --rm -it --init \
-        "${VOLUME_MOUNTS[@]}" \
-        "${CONTAINER_ENV[@]}" \
-        -v "$SOURCE_DIR/.passwd:/etc/passwd:ro" \
-        -v "$SOURCE_DIR/.group:/etc/group:ro" \
-        -u "$(id -u):$(id -g)" \
-        "$DOCKER_REPO/$IMAGE_NAME" \
-        bash -c "$cmd"
+    docker exec -i "${tty_args[@]}" "$CONTAINER_NAME" bash -c "$cmd"
 }
 
 # Run command directly or in container based on DIRECT_BUILD
@@ -364,6 +400,15 @@ case "$ACTION" in
     shell)
         run_in_container "bash"
         echo "Container shell session ended."
+        ;;
+    stop)
+        if docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+            docker stop "$CONTAINER_NAME"
+            echo "Container $CONTAINER_NAME stopped and kept; remove it with: docker rm $CONTAINER_NAME"
+        else
+            echo "Container $CONTAINER_NAME does not exist."
+            exit 1
+        fi
         ;;
     *)
         echo "Unknown action: $ACTION"
