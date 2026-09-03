@@ -255,6 +255,7 @@ static int rpmi_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	ret = rpmi_mbox_send_message(context->chan, &msg);
 	if (ret)
 		return ret;
+
 	if (alarmrx.status)
 		return rpmi_to_linux_error(alarmrx.status);
 
@@ -303,9 +304,9 @@ static irqreturn_t mpxy_rtc_irq_thread(int irq, void *dev_id)
 	int ret;
 	struct rpmi_mbox_message msg;
 	struct rpmi_rtc_context *context = dev_id;
-	struct rpmi_rtc_query_pending_req alarmtx;
+	struct rpmi_rtc_query_pending_req alarmtx = {};
 	struct rpmi_rtc_query_pending_resp alarmrx;
-	struct rpmi_rtc_clear_pending_req alarmctx;
+	struct rpmi_rtc_clear_pending_req alarmctx = {};
 	struct rpmi_rtc_clear_pending_resp alarmcrx;
 
 	rpmi_mbox_init_send_with_response(&msg, RPMI_RTC_SRV_QUERY_PENDING,
@@ -320,6 +321,7 @@ static irqreturn_t mpxy_rtc_irq_thread(int irq, void *dev_id)
 		ret = rpmi_mbox_send_message(context->chan, &msg);
 		if (ret)
 			return IRQ_HANDLED;
+
 		if (alarmcrx.status)
 			return IRQ_HANDLED;
 	}
@@ -411,10 +413,63 @@ static const struct of_device_id rpmi_rtc_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, rpmi_rtc_of_match);
 
+#ifdef CONFIG_PM_SLEEP
+static int rpmi_rtc_suspend(struct device *dev)
+{
+	return 0;
+}
+
+static int rpmi_rtc_resume(struct device *dev)
+{
+	int ret;
+	struct rpmi_rtc_context *context = dev_get_drvdata(dev);
+	struct rpmi_mbox_message msg;
+	struct rpmi_rtc_query_pending_req query_req = {};
+	struct rpmi_rtc_query_pending_resp query_resp;
+	struct rpmi_rtc_clear_pending_req clear_req = {};
+	struct rpmi_rtc_clear_pending_resp clear_resp;
+
+	/* Query if there's a pending RTC interrupt */
+	rpmi_mbox_init_send_with_response(&msg, RPMI_RTC_SRV_QUERY_PENDING,
+					  &query_req, sizeof(query_req),
+					  &query_resp, sizeof(query_resp));
+	ret = rpmi_mbox_send_message(context->chan, &msg);
+	if (ret) {
+		dev_err(dev, "[RTC-DEBUG] rpmi_rtc_resume: query_pending failed, ret=%d\n", ret);
+		return ret;
+	}
+
+	/* If there's a pending interrupt, clear it and notify RTC core */
+	if (query_resp.status) {
+		/* Clear the pending interrupt */
+		rpmi_mbox_init_send_with_response(&msg, RPMI_RTC_SRV_CLR_PENDING,
+						  &clear_req, sizeof(clear_req),
+						  &clear_resp, sizeof(clear_resp));
+		ret = rpmi_mbox_send_message(context->chan, &msg);
+		if (ret) {
+			dev_err(dev, "[RTC-DEBUG] rpmi_rtc_resume: clear_pending failed, ret=%d\n", ret);
+			return ret;
+		}
+
+		if (clear_resp.status) {
+			dev_err(dev, "[RTC-DEBUG] rpmi_rtc_resume: clear_pending returned error status=%d\n", clear_resp.status);
+			return rpmi_to_linux_error(clear_resp.status);
+		}
+
+		rtc_update_irq(context->rtc, 1, RTC_IRQF | RTC_AF);
+	}
+
+	return 0;
+}
+#endif
+
+static SIMPLE_DEV_PM_OPS(rpmi_rtc_pm_ops, rpmi_rtc_suspend, rpmi_rtc_resume);
+
 static struct platform_driver rpmi_rtc_driver = {
 	.driver = {
 		.name = "riscv-rpmi-rtc",
 		.of_match_table = rpmi_rtc_of_match,
+		.pm = pm_ptr(&rpmi_rtc_pm_ops),
 	},
 	.probe = rpmi_rtc_probe,
 };
