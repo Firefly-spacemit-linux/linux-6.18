@@ -29,9 +29,10 @@
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 
-#define MIN_VALID_DISK_SIZE	2
-#define I2C_NO_READ_TIMEOUT_SEC	5
-#define THERMAL_ZONE_NAME	"thermal_top"
+#define MIN_VALID_DISK_SIZE		2
+#define I2C_NO_READ_TIMEOUT_SEC		5
+#define I2C_NO_READ_WARN_INTERVAL_SEC	60
+#define THERMAL_ZONE_NAME		"thermal_top"
 
 /* little endian */
 struct spacemit_sys_info {
@@ -71,6 +72,8 @@ struct spacemit_slave_data {
 	atomic_t read_processed_cnt;
 	atomic_t stop_cnt;
 	unsigned long last_read_jiffies;
+	unsigned long last_no_read_warn_jiffies;
+	bool no_read_warned;
 };
 
 static void poll_cpu_temp_work_func(struct work_struct *work)
@@ -164,9 +167,18 @@ static void poll_cpu_temp_work_func(struct work_struct *work)
 	last_read = READ_ONCE(data->last_read_jiffies);
 	if (last_read &&
 	    time_after(jiffies, last_read + I2C_NO_READ_TIMEOUT_SEC * HZ)) {
-		dev_warn_ratelimited(&data->client->dev,
-			"No I2C master read for %u s (last read %lu jiffies ago)\n",
-			I2C_NO_READ_TIMEOUT_SEC, (unsigned long)(jiffies - last_read));
+		if (!data->no_read_warned ||
+		    time_after(jiffies, data->last_no_read_warn_jiffies +
+			       I2C_NO_READ_WARN_INTERVAL_SEC * HZ)) {
+			data->no_read_warned = true;
+			data->last_no_read_warn_jiffies = jiffies;
+			dev_warn(&data->client->dev,
+				 "No I2C master read for %u s (last read %lu jiffies ago)\n",
+				 I2C_NO_READ_TIMEOUT_SEC,
+				 (unsigned long)(jiffies - last_read));
+		}
+	} else {
+		data->no_read_warned = false;
 	}
 
 	/* run again in 1s */
@@ -289,7 +301,7 @@ static int status_show(struct seq_file *m, void *v)
 	seq_printf(m, "stop:             %d\n", atomic_read(&data->stop_cnt));
 
 	if (last_read)
-		seq_printf(m, "last_read_ago_ms: %lu\n",
+		seq_printf(m, "last_read_ago_ms: %u\n",
 			   jiffies_to_msecs(jiffies - last_read));
 	else
 		seq_printf(m, "last_read_ago_ms: never\n");
