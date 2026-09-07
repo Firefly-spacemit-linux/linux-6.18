@@ -373,6 +373,8 @@ static void handle_rpc_func_rpmb_frames(struct tee_context *ctx,
 	struct tee_param params[2];
 	struct rpmb_dev *rdev;
 	void *p0, *p1;
+	void *req_buf = NULL, *rsp_buf = NULL;
+	bool need_bounce = false;
 
 	mutex_lock(&optee->rpmb_dev_mutex);
 	rdev = rpmb_dev_get(optee->rpmb_dev);
@@ -395,17 +397,41 @@ static void handle_rpc_func_rpmb_frames(struct tee_context *ctx,
 			    params[0].u.memref.shm_offs);
 	p1 = tee_shm_get_va(params[1].u.memref.shm,
 			    params[1].u.memref.shm_offs);
+
+	/* Check if bounce buffer is needed for reserved SHM (vmalloc addresses) */
+	if (!virt_addr_valid(p0) || !virt_addr_valid(p1)) {
+		need_bounce = true;
+		req_buf = kmalloc(params[0].u.memref.size, GFP_KERNEL);
+		rsp_buf = kmalloc(params[1].u.memref.size, GFP_KERNEL);
+		if (!req_buf || !rsp_buf) {
+			arg->ret = TEEC_ERROR_OUT_OF_MEMORY;
+			goto out_free;
+		}
+		memcpy(req_buf, p0, params[0].u.memref.size);
+		p0 = req_buf;
+		p1 = rsp_buf;
+	}
+
 	if (rpmb_route_frames(rdev, p0, params[0].u.memref.size, p1,
 			      params[1].u.memref.size)) {
 		arg->ret = TEEC_ERROR_BAD_PARAMETERS;
-		goto out;
+		goto out_free;
 	}
+
+	if (need_bounce)
+		memcpy(tee_shm_get_va(params[1].u.memref.shm,
+				      params[1].u.memref.shm_offs),
+		       rsp_buf, params[1].u.memref.size);
+
 	if (optee->ops->to_msg_param(optee, arg->params,
 				     arg->num_params, params)) {
 		arg->ret = TEEC_ERROR_BAD_PARAMETERS;
-		goto out;
+		goto out_free;
 	}
 	arg->ret = TEEC_SUCCESS;
+out_free:
+	kfree(req_buf);
+	kfree(rsp_buf);
 out:
 	rpmb_dev_put(rdev);
 }
