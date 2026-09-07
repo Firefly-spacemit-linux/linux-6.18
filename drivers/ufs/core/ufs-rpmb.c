@@ -42,15 +42,49 @@ struct ufs_rpmb_dev {
 static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t len, bool send)
 {
 	struct scsi_device *sdev = hba->ufs_rpmb_wlun;
+	u8 sense[SCSI_SENSE_BUFFERSIZE] = { };
+	struct scsi_sense_hdr sshdr = { };
+	/*
+	 * The first command to a freshly powered RPMB W-LUN reports a
+	 * "power on reset occurred" UNIT ATTENTION. Retry it, otherwise the
+	 * key/counter exchange fails before it even starts.
+	 */
+	struct scsi_failure failure_defs[] = {
+		{
+			.result = SAM_STAT_CHECK_CONDITION,
+			.sense = UNIT_ATTENTION,
+			.asc = SCMD_FAILURE_ASC_ANY,
+			.ascq = SCMD_FAILURE_ASCQ_ANY,
+			.allowed = 3,
+		},
+		{ .result = 0 },
+	};
+	struct scsi_failures failures = {
+		.failure_definitions = failure_defs,
+	};
+	struct scsi_exec_args args = {
+		.sense = sense,
+		.sense_len = SCSI_SENSE_BUFFERSIZE,
+		.sshdr = &sshdr,
+		.failures = &failures,
+	};
 	u8 cdb[12] = { };
+	int ret;
 
 	cdb[0] = send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
 	cdb[1] = UFS_RPMB_SEC_PROTOCOL;
 	put_unaligned_be16(spsp, &cdb[2]);
 	put_unaligned_be32(len, &cdb[6]);
 
-	return scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
-				buffer, len, /*timeout=*/30 * HZ, 0, NULL);
+	ret = scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+			       buffer, len, /*timeout=*/30 * HZ, 0, &args);
+	if (ret)
+		dev_err(hba->dev,
+			"RPMB SEC_PROTO%s spsp=0x%04x ret=0x%08x status=0x%02x sense(key/asc/ascq)=0x%02x/0x%02x/0x%02x",
+			send ? "_OUT" : "_IN", spsp, ret,
+			status_byte(ret), sshdr.sense_key, sshdr.asc, sshdr.ascq);
+
+	return ret;
 }
 
 /* UFS RPMB route frames implementation */
