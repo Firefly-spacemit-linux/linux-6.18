@@ -19,10 +19,12 @@
 #include <linux/list.h>
 #include <ufs/ufshcd.h>
 #include <linux/unaligned.h>
+#include <crypto/blake2s.h>
 #include "ufshcd-priv.h"
 
 #define UFS_RPMB_SEC_PROTOCOL		0xEC	/* JEDEC UFS application */
 #define UFS_RPMB_SEC_PROTOCOL_ID	0x01	/* JEDEC UFS RPMB protocol ID, CDB byte3 */
+#define UFS_RPMB_ID_LEN			16	/* BLAKE2s-128 hash output size */
 
 static const struct bus_type ufs_rpmb_bus_type = {
 	.name = "ufs_rpmb",
@@ -137,6 +139,7 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
 	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
 	struct rpmb_dev *rdev;
 	char *cid = NULL;
+	u8 *dev_id = NULL;
 	int region;
 	u32 cap;
 	int ret;
@@ -195,21 +198,38 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
 			goto err_out;
 		}
 
-		descr.dev_id = cid;
-		descr.dev_id_len = strlen(cid);
+		/* Hash the device_id string to a fixed 16 bytes for OP-TEE
+		 * compatibility: the secure world RPMB probe expects a 16-byte
+		 * CID (the size of an eMMC CID), while a UFS device id is a
+		 * variable-length string.
+		 */
+		dev_id = kmalloc(UFS_RPMB_ID_LEN, GFP_KERNEL);
+		if (!dev_id) {
+			kfree(cid);
+			device_unregister(&ufs_rpmb->dev);
+			ret = -ENOMEM;
+			goto err_out;
+		}
+		blake2s(dev_id, cid, NULL, UFS_RPMB_ID_LEN, strlen(cid), 0);
+		kfree(cid);
+		cid = NULL;
+
+		descr.dev_id = dev_id;
+		descr.dev_id_len = UFS_RPMB_ID_LEN;
 		descr.capacity = cap;
 
 		/* Register RPMB device */
 		rdev = rpmb_dev_register(&ufs_rpmb->dev, &descr);
 		if (IS_ERR(rdev)) {
 			dev_err(hba->dev, "Failed to register UFS RPMB device.\n");
+			kfree(dev_id);
 			device_unregister(&ufs_rpmb->dev);
 			ret = PTR_ERR(rdev);
 			goto err_out;
 		}
 
-		kfree(cid);
-		cid = NULL;
+		kfree(dev_id);
+		dev_id = NULL;
 
 		ufs_rpmb->rdev = rdev;
 		ufs_rpmb->region_id = region;
