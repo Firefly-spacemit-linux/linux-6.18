@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#define FF_EEPROM
+#define FF_GPIO_POWEROFF
+#define FF_LEDS
+#define FF_KEY
+#define FF_DEBUG_115200
+#define FF_FAN
+#define FF_GMAC1
+#define FF_WATCHDOG
+#define FF_SPI_CAN
+#define FF_USB30_TYPEA
+#define FF_4G_5G_MODULE
+#define FF_PCIE1
+#define FF_PCIE0
+#define FF_ASM1182e_PCIE0_M2
+#define FF_ASM1182e_PCIE0_WIFI
+#define FF_SDCARD
+#define FF_RS485_UART6
+//#define FF_RS485_DIR
+#define FF_RS232_UART1
+#define FF_ES8390
+#define FF_DP1
+#define FF_AC3V3_EN
+//#define FF_AC_FAN_PWM
+#define FF_RPMI_IFX
+
+#include "k3-firefly-aibox-pro.dtsi"
+
+/ {
+	model = "spacemit AIBOX-PRO-K3 board";
+	compatible = "spacemit,k3-com260";
+};

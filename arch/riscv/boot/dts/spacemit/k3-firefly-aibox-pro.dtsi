@@ -1,0 +1,1267 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#include "k3-firefly-common.dtsi"
+
+#ifdef FF_DP1
+#include "k3-dp1.dtsi"
+#endif
+
+/ {
+#ifdef FF_GPIO_POWEROFF
+	gpio_poweroff: gpio-poweroff 
+	{
+		compatible = "gpio-poweroff";
+		gpios = <&gpio K3_GPIO(88) GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&shutdown_pwr_cfg>;
+		/* only drive the pin low until device is off */
+		active-delay-ms = <3000>;
+	};
+#endif
+
+#ifdef FF_LEDS
+	firefly_leds: leds 
+	{
+		status = "okay";
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 =<&leds_gpio_cfg>;
+
+		power_led: power 
+		{
+			label = "blue:power"; 
+			default-state = "on";
+			linux,default-trigger = "ir-power-click";
+			gpios = <&gpio K3_GPIO(45) GPIO_ACTIVE_HIGH>;
+		};
+
+		user_led: user 
+		{
+			label = "green:user"; 
+			default-state = "off";
+			linux,default-trigger = "ir-user-click";
+			gpios = <&gpio K3_GPIO(75) GPIO_ACTIVE_HIGH>;
+		};
+
+		user1_led: user1 
+		{
+			label = "red:user1"; 
+			default-state = "off";
+			linux,default-trigger = "ir-user1-click";
+			gpios = <&gpio K3_GPIO(122) GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+#else
+	firefly_gpio_led
+	{
+		compatible = "firefly,led";
+		pinctrl-names = "default";
+		pinctrl-0 = <&firefly_led_gpio_cfg>;
+		gpios = <&gpio K3_GPIO(45) GPIO_ACTIVE_HIGH>;
+	};
+#endif
+
+#ifdef FF_KEY
+	gpio_keys: gpio-keys 
+	{
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&boot_key_cfg>, <&power_key_cfg>;
+
+		button-boot 
+		{
+			label = "boot";
+			linux,code = <KEY_F12>;
+			gpios = <&gpio K3_GPIO(69) GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+
+		button-power 
+		{
+			label = "power";
+			linux,code = <KEY_POWER>;
+			gpios = <&gpio K3_GPIO(84) GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+	};
+#endif
+
+#ifdef FF_SPI_CAN
+	mcp251xfd_clk: mcp251xfd-clk 
+	{
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <40000000>;
+	};
+#endif
+
+#ifdef FF_USB30_TYPEA
+	usb30_vcc5v0_en: regulator-usb30-vcc5v0-host 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "usb30_vcc5v0_host";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpios = <&gpio K3_GPIO(100) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb30_vcc5v0_en_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_4G_5G_MODULE
+	vcc3v3_4g: regulator-vcc3v3-4g 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_4g";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(119) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		vin-supply = <&vcc5v0_sys>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&g4_5g_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	vcc5v0_hub20_4g: regulator-vcc5v0-hub20-4g 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_hub20_4g";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpios = <&gpio K3_GPIO(104) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		vin-supply = <&vcc5v0_sys>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hub20_pwr_en_4g_cfg>;
+		status = "okay";
+	};
+#endif
+
+#if defined(FF_PCIE1) || defined(FF_PCIE0)
+	vcc3v3_pcie: vcc3v3-pcie 
+	{
+		status = "okay";
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_pcie";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&gpio K3_GPIO(50) GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&pcie_pwr_en_cfg>;
+        pinctrl-names = "default";
+		startup-delay-us = <5000>;
+		vin-supply = <&vcc12v_dcin>;
+	};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_M2
+	asm1182e_power: regulator-asm1182e-power 
+    {
+		compatible = "regulator-fixed";
+		regulator-name = "asm1182e_power";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(106) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&asm1182e_pwr_en_cfg>;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		status = "okay";
+	};
+
+	asm1182e_perst_release: regulator-asm1182e-perst-release 
+    {
+		compatible = "regulator-fixed";
+		regulator-name = "asm1182e_perst_release";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(87) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&asm1182e_perst_cfg>;
+		vin-supply = <&asm1182e_power>;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_WIFI
+	vcc3v3_wifi: regulator-vcc3v3-wifi 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_wifi";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(99) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	rfkill_wifi: rfkill-wifi 
+	{
+		compatible = "rfkill-gpio";
+		label = "rfkill-pcie-wlan";
+		radio-type = "wlan";
+		shutdown-gpios = <&gpio K3_GPIO(127) GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_disable_cfg>;
+		status = "okay";
+	};
+
+	rfkill_bt: rfkill-bt 
+	{
+		compatible = "rfkill-gpio";
+		label = "rfkill-usb-bt";
+		radio-type = "bluetooth";
+		shutdown-gpios = <&gpio K3_GPIO(73) GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_disable_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_RS485_DIR
+	rs485_direction_leds: rs485-direction-leds 
+	{
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rs485_direction_cfg>;
+
+		rs485_direction: rs485-direction 
+		{
+			label = "RS485_H_SEND_L_RECV";
+			gpios = <&gpio K3_GPIO(51) GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	};
+#endif
+
+#ifdef FF_DP1
+	/*
+	vcc_dp_pwr_en: vcc-dp-pwr-en 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_dp_pwr_en";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&gpio K3_GPIO(85) GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&dp_pwr_en_cfg>;
+		status = "okay";
+	};
+	*/
+#endif
+
+#ifdef FF_AC3V3_EN
+	vcc3v3_ac: regulator-vcc3v3-ac 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_ac";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(50) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ac3v3_pwr_en_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_AC_FAN_PWM
+	fan_pwm16: pwm-fan 
+	{
+		compatible = "pwm-fan";
+		pwms = <&pwm16 0 25000 0>;  /* GPIO58, mux function 6, PWM16; 25 us period = 40 kHz. */
+		cooling-levels = <0 64 128 192 255>;  /* Five cooling levels, expressed as duty values from 0 to 255. */
+		#cooling-cells = <2>;
+	};
+#endif
+
+#ifdef FF_ES8390
+	es8390_sound: es8390-sound 
+	{
+		compatible = "simple-audio-card";
+		status = "okay";
+
+		simple-audio-card,name = "snd-es8390";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,bitclock-master = <&es8390_link_cpu>;
+		simple-audio-card,frame-master = <&es8390_link_cpu>;
+		simple-audio-card,hp-det-gpios =
+			<&gpio K3_GPIO(71) GPIO_ACTIVE_LOW>;
+
+		simple-audio-card,widgets =
+			"Headphone", "Headphones",
+			"Microphone", "Main Mic";
+		simple-audio-card,routing =
+			"Headphones", "HPOL",
+			"Headphones", "HPOR",
+			"INPUT2", "Main Mic";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&es8390_hp_det_cfg>, <&es8390_phone_ctl_cfg>;
+
+		es8390_link_cpu: simple-audio-card,cpu 
+		{
+			sound-dai = <&i2s0>;
+		};
+
+		simple-audio-card,codec 
+		{
+			sound-dai = <&es8390>;
+		};
+	};
+#endif
+};
+
+#ifdef FF_DEBUG_115200
+&uart0 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_0_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_FAN
+&i2c6 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c6_1_cfg>;
+	status = "okay";
+
+	ctf2301: ctf2301@4c 
+	{
+		compatible = "sensylink,ctf2301";
+		reg = <0x4c>;
+		#cooling-cells = <2>;
+	};
+};
+#endif
+
+#ifdef FF_GMAC1
+&eth1
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac1_cfg>;
+
+	max-speed = <1000>;
+	tx-fifo-depth = <8192>;
+	rx-fifo-depth = <8192>;
+	snps,tso;
+	snps,force_sf_dma_mode;
+	phy-mode = "rgmii";
+	phy-handle = <&rgmii1>;
+	snps,reset-gpios = <&gpio 1 5 GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 20000 100000>;
+
+	spacemit,wake-irq-enable;
+
+	spacemit,clk-tuning-enable;
+	spacemit,clk-tuning-by-delayline;
+	spacemit,tx-phase = <47>;
+	spacemit,rx-phase = <53>;
+
+	status = "okay";
+
+	mdio 
+	{
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		rgmii1: phy@1 
+		{
+			compatible = "ethernet-phy-id001c.c916";
+			reg = <0x1>;
+			device_type = "ethernet-phy";
+		};
+	};
+};
+#endif
+
+#ifdef FF_WATCHDOG
+&i2c3 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c3_2_cfg>;
+	status = "okay";
+
+	pc9202_base: pc9202_base@3c 
+	{
+		status = "okay";
+		compatible = "firefly,pc9202";
+		reg = <0x3c>;
+		index = <1>;
+		driver-names = "wdt_base";
+	};
+};
+#endif
+
+#ifdef FF_SPI_CAN
+&rspi0 
+{
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&rssp0_0_cfg>;
+	mcp251xfd: canfd@0 
+	{
+		status = "okay";
+		compatible = "microchip,mcp251xfd";
+		reg = <0>;
+		clocks = <&mcp251xfd_clk>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&spi_can_int_cfg>;
+		interrupt-parent = <&gpio>;
+		interrupts = <K3_GPIO(56) IRQ_TYPE_EDGE_FALLING>;
+		spi-max-frequency = <1000000>;
+		spi-cs-inactive-delay-ns = <2000>;
+	};
+};
+#endif
+
+#ifdef FF_USB30_TYPEA
+&gpio 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb30_hub_rst_cfg>, <&usb_sel_cfg>;
+
+	usb30-hub-rst-hog 
+	{
+		gpio-hog;
+		gpios = <K3_GPIO(77) GPIO_ACTIVE_HIGH>;
+		output-low;
+		line-name = "usb30_hub_rst";
+	};
+
+	usb-sel-host-hog 
+	{
+		gpio-hog;
+		gpios = <K3_GPIO(118) GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "usb_sel_host";
+	};
+};
+
+&usb3_porta_u2phy 
+{
+	status = "okay";
+};
+
+&usb3_porta_u3phy 
+{
+	status = "okay";
+};
+
+&usb3_porta 
+{
+	vbus-supply = <&usb30_vcc5v0_en>;
+	dr_mode = "host";
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PCIE1
+&phy0 
+{
+	status = "okay";
+};
+
+&phy1 
+{
+	status = "okay";
+};
+
+&pcie0_rc 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_1_cfg>;
+	phys = <&phy0>, <&phy1>;
+	phy-names = "phy0", "phy1";
+
+	num-lanes = <4>;
+	vpcie3v3-supply = <&vcc3v3_pcie>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PCIE0
+&phy5
+{
+	status = "okay";
+};
+
+&pcie4_rc
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie4_1_cfg>;
+	phys = <&phy5>;
+	phy-names = "phy5";
+
+	num-lanes = <1>;
+	vpcie3v3-supply = <&vcc3v3_pcie>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_M2
+&phy4 
+{
+	status = "okay";
+};
+
+&pcie3_rc 
+{
+	phys = <&phy4>;
+	phy-names = "phy4";
+	num-lanes = <1>;
+	max-link-speed = <2>;
+	vpcie3v3-supply = <&asm1182e_perst_release>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_WIFI
+&resmem 
+{
+	pcie3_dma_pool: pcie3-dma-pool@1f0000000 
+	{
+		compatible = "restricted-dma-pool";
+		reg = <0x1 0xf0000000 0x0 0x02000000>;
+	};
+};
+
+&pcie3_rc 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie3_wifi_clkreq_cfg>;
+
+	dma-ranges = <0x02000000 0x0 0x80000000
+		      0x1 0xf0000000
+		      0x0 0x02000000>;
+	memory-region = <&pcie3_dma_pool>;
+};
+#endif
+
+#ifdef FF_SDCARD
+&sdcard
+{
+	pinctrl-names = "default","uhs";
+	pinctrl-0 = <&mmc1_cfg &mmc1_cd_cfg>;
+	pinctrl-1 = <&mmc1_uhs_cfg &mmc1_cd_cfg>;
+	bus-width = <4>;
+	wp-inverted;
+	cd-gpios = <&gpio 0 4 GPIO_ACTIVE_HIGH>;
+	vmmc-supply = <&p3v3>;
+	vqmmc-supply = <&aldo1>;
+	no-mmc;
+	no-sdio;
+	clock-frequency = <204800000>;
+	spacemit,tx_delaycode = <0x1f>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS485_UART6
+&uart6_0_cfg
+{
+	uart6-0-pins
+	{
+		/delete-property/ pinmux;
+		pinmux = <K3_PADCONF(48, 2)>,  /* uart6 tx */
+			     <K3_PADCONF(49, 2)>;  /* uart6 rx */
+		bias-disable;
+		drive-strength = <25>;
+		power-source = <1800>;
+	};
+};
+
+&uart6
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart6_0_cfg>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_RS232_UART1
+&uart1
+{
+	status = "disabled";
+};
+#endif
+
+#ifdef FF_DP1
+&dp1 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&dp1_3_cfg>;
+	status = "okay";
+};
+
+&dpu1_crtc0 
+{
+	memory-region = <&dpu_resv1>;
+	status = "okay";
+};
+
+&adma3 
+{
+	status = "okay";
+};
+
+&ri2s3 
+{
+	status = "okay";
+};
+
+&sound_card_dp1 
+{
+	status = "okay";
+	simple-audio-card,name = "snd-dp1";
+	simple-audio-card,mclk-fs = <512>;
+	simple-audio-card,dai-link@0 
+	{
+		format = "left_j";
+		frame-master = <&dp1_link_cpu>;
+		bitclock-master = <&dp1_link_cpu>;
+		dp1_link_codec: codec 
+		{
+			playback-only;
+			sound-dai = <&dp1>;
+		};
+	};
+};
+#endif
+
+#ifdef FF_AC_FAN_PWM
+&pwm16 
+{
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm16_0_cfg>;
+};
+
+&thermal_zones 
+{
+	thermal_cluster0 
+	{
+		polling-delay = <1000>;
+		polling-delay-passive = <250>;
+		thermal-sensors = <&thermal 4>;
+
+		trips 
+		{
+			thermal_cluster0_trip0: thermal_cluster0-trip0 
+			{
+				temperature = <35000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+
+			thermal_cluster0_trip1: thermal_cluster0-trip1 
+			{
+				temperature = <40000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip2: thermal_cluster0-trip2 
+			{
+				temperature = <50000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip3: thermal_cluster0-trip3 
+			{
+				temperature = <60000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip4: thermal_cluster0-trip4 
+			{
+				temperature = <70000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+		};
+#ifdef FF_AC_FAN_PWM
+		cooling-maps 
+		{
+			map0 
+			{
+				trip = <&thermal_cluster0_trip0>;
+				cooling-device = <&fan_pwm16 0 0>;
+			};
+
+			map1 
+			{
+				trip = <&thermal_cluster0_trip1>;
+				cooling-device = <&fan_pwm16 1 1>;
+			};
+
+			map2 
+			{
+				trip = <&thermal_cluster0_trip2>;
+				cooling-device = <&fan_pwm16 2 2>;
+			};
+
+			map3 
+			{
+				trip = <&thermal_cluster0_trip3>;
+				cooling-device = <&fan_pwm16 3 3>;
+			};
+
+			map4 
+			{
+				trip = <&thermal_cluster0_trip4>;
+				cooling-device = <&fan_pwm16 4 4>;
+			};
+		};
+#endif
+	};
+};
+#endif
+
+#ifdef FF_ES8390
+&gpio 
+{
+	es8390-phone-ctl-hog 
+	{
+		gpio-hog;
+		gpios = <K3_GPIO(44) GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "es8390_phone_ctl";
+	};
+};
+
+&i2c0 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_0_cfg>;
+	status = "okay";
+
+	es8390: audio-codec@11 
+	{
+		/* This BSP drives ES8390 through its ES8389-compatible codec driver. */
+		compatible = "everest,es8389";
+		reg = <0x11>;
+		#sound-dai-cells = <0>;
+
+		/* GPIO85/SSPA0_SYSCLK is wired to the codec MCLK input. */
+		clocks = <&syscon_mpmu CLK_MPMU_I2S0_SYSCLK>;
+		clock-names = "mclk";
+		everest,mclk-src = /bits/ 8 <0x40>;
+
+		status = "okay";
+	};
+};
+
+&i2s0 
+{
+	pinctrl-names = "default";
+	pinctrl-0 = <&es8390_i2s0_cfg>;
+	status = "okay";
+};
+#endif
+
+&pinctrl 
+{
+#ifdef FF_EEPROM
+	i2c2-1-cfg 
+	{
+		i2c2-0-pins 
+		{
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_GPIO_POWEROFF
+	shutdown_pwr_cfg: shutdown-pwr-cfg 
+	{
+		shutdown-pwr-pin 
+		{
+			pinmux = <K3_PADCONF(88, 0)>;
+
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_LEDS
+	leds_gpio_cfg: leds-gpio-cfg 
+	{
+		leds-gpio-pins 
+		{
+			pinmux = <K3_PADCONF(45, 0)>, <K3_PADCONF(75, 0)>, <K3_PADCONF(122,0)>;
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#else
+	firefly_led_gpio_cfg: firefly-led-gpio-cfg
+	{
+		firefly-led-gpio-pin
+		{
+			pinmux = <K3_PADCONF(45, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_KEY
+	boot_key_cfg: boot-key-cfg 
+	{
+		boot-key-pin 
+		{
+			pinmux = <K3_PADCONF(69, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	power_key_cfg: power-key-cfg 
+	{
+		power-key-pin 
+		{
+			pinmux = <K3_PADCONF(84, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_FAN
+	i2c6-1-cfg 
+	{
+		i2c6-0-pins 
+		{
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_GMAC1
+	gmac1-cfg 
+	{
+		/delete-node/ gmac1-2-pins;
+		/delete-node/ gmac1-4-pins;
+		/delete-node/ gmac1-5-pins;
+
+		gmac1-0-pins 
+		{
+			power-source = <1800>;
+		};
+
+		gmac1-1-pins 
+		{
+			power-source = <1800>;
+		};
+
+		gmac1-3-pins 
+		{
+			power-source = <1800>;
+		};
+
+		gmac1-6-pins 
+		{
+			pinmux = <K3_PADCONF(37, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_WATCHDOG
+	i2c3_2_cfg: i2c3-2-cfg 
+	{
+		i2c3-0-pins
+		{
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_SPI_CAN
+	spi_can_int_cfg: spi-can-int 
+	{
+		spi-can-int-pin 
+		{
+			pinmux = <K3_PADCONF(56,0)>;
+			drive-strength = <25>;
+			power-source = <3300>;
+			bias-pull-up;
+		};
+	};
+
+	rssp0-0-cfg
+	{
+		rssp0-0-pins
+		{
+			power-source = <1800>;
+		};
+
+		rssp0-1-pins
+		{
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_USB30_TYPEA
+	usb30_vcc5v0_en_cfg: usb30-vcc5v0-en-cfg
+	{
+		usb30-vcc5v0-en-pin 
+		{
+			pinmux = <K3_PADCONF(100, 0)>;
+			drive-strength = <25>;
+			power-source = <1800>;
+			bias-disable;
+		};
+	};
+
+	usb30_hub_rst_cfg: usb30-hub-rst-cfg 
+	{
+		usb30-hub-rst-pin 
+		{
+			pinmux = <K3_PADCONF(77, 0)>;
+			drive-strength = <25>;
+			power-source = <3300>;
+			bias-disable;
+		};
+	};
+
+	usb_sel_cfg: usb-sel-cfg 
+	{
+		usb-sel-pin 
+		{
+			pinmux = <K3_PADCONF(118, 0)>;
+			drive-strength = <25>;
+			power-source = <1800>;
+			bias-pull-up;
+		};
+	};
+#endif
+
+#ifdef FF_4G_5G_MODULE
+	g4_5g_pwr_en_cfg: g4-5g-pwr-en-cfg 
+	{
+		g4-5g-pwr-en-pins 
+		{
+			pinmux = <K3_PADCONF(119, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	hub20_pwr_en_4g_cfg: hub20-pwr-en-4g-cfg 
+	{
+		hub20-pwr-en-pins 
+		{
+			pinmux = <K3_PADCONF(104, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#if defined(FF_PCIE1) || defined(FF_PCIE0)
+	pcie_pwr_en_cfg: pcie-pwr-en-cfg 
+	{
+		pcie-pwr-en-pin 
+		{
+			pinmux = <K3_PADCONF(50, 0)>;
+                        
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIE1
+	pcie0-1-cfg 
+	{
+		pcie0-0-pins 
+		{
+			pinmux = <K3_PADCONF(79, 5)>,	/* pcie0 perst */
+				     <K3_PADCONF(81, 5)>;	/* pcie0 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIE0
+	pcie4-1-cfg
+	{
+		pcie4-0-pins
+		{
+			pinmux = <K3_PADCONF(76, 5)>,	/* pcie4 perst */
+				     <K3_PADCONF(80, 5)>,	/* pcie4 wake */
+				     <K3_PADCONF(78, 5)>;	/* pcie4 clkreq */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_M2
+	asm1182e_pwr_en_cfg: asm1182e-pwr-en-cfg 
+    {
+		asm1182e-pwr-en-pins 
+        {
+			pinmux = <K3_PADCONF(106, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	asm1182e_perst_cfg: asm1182e-perst-cfg 
+    {
+		asm1182e-perst-pins 
+        {
+			pinmux = <K3_PADCONF(87, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_ASM1182e_PCIE0_WIFI
+	wifi_pwr_en_cfg: wifi-pwr-en-cfg 
+	{
+		wifi-pwr-en-pins 
+		{
+			pinmux = <K3_PADCONF(99, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	wifi_disable_cfg: wifi-disable-cfg 
+	{
+		wifi-disable-pins 
+		{
+			pinmux = <K3_PADCONF(127, 0)>;
+			bias-pull-down;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	bt_disable_cfg: bt-disable-cfg 
+	{
+		bt-disable-pins 
+		{
+			pinmux = <K3_PADCONF(73, 0)>;
+			bias-pull-down;
+			drive-strength = <38>;
+			power-source = <3300>;
+		};
+	};
+
+	pcie3_wifi_clkreq_cfg: pcie3-wifi-clkreq-cfg 
+	{
+		pcie3-wifi-clkreq-pins 
+		{
+			pinmux = <K3_PADCONF(107, 5)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_SDCARD
+    mmc1_cd_cfg: mmc1-cd-cfg 
+	{
+     	mmc1-cd-pins 
+		{
+     		pinmux = <K3_PADCONF(4, 0)>;
+     		bias-pull-up = <1>;
+     		drive-strength = <8>;
+     		power-source = <3300>;
+     	};
+    };
+#endif
+
+#ifdef FF_RS485_DIR
+	rs485_direction_cfg: rs485-direction-cfg 
+	{
+		rs485-direction-pin 
+		{
+			pinmux = <K3_PADCONF(51, 0)>; /* RS485 /RE+DE direction */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_RS232_UART1
+	rs232_gpio_cfg: rs232-gpio-cfg
+	{
+		rs232-gpio-out-pins
+		{
+			pinmux = <K3_PADCONF(121,0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+
+		rs232-gpio-in-pins
+		{
+			pinmux = <K3_PADCONF(120,0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_DP1
+	dp1-3-cfg 
+	{
+		dp1-0-pins 
+		{
+			power-source = <1800>;
+		};
+	};
+
+	/*
+	dp_pwr_en_cfg: dp-pwr-en-cfg 
+	{
+		dp-pwr-en-pin 
+		{
+			pinmux = <K3_PADCONF(85, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+	*/
+#endif
+
+#ifdef FF_AC3V3_EN
+	ac3v3_pwr_en_cfg: ac3v3-pwr-en-cfg 
+	{
+		ac3v3-pwr-en-pins 
+		{
+			pinmux = <K3_PADCONF(50, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_AC_FAN_PWM
+	pwm16_0_cfg: pwm16-0-cfg 
+	{
+		pwm16-0-pins 
+		{
+			pinmux = <K3_PADCONF(58, 6)>;
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+#endif
+
+#ifdef FF_ES8390
+	i2c0-0-cfg 
+	{
+		i2c0-0-pins 
+		{
+			power-source = <3300>;
+		};
+	};
+
+	es8390_i2s0_cfg: es8390-i2s0-cfg 
+	{
+		es8390-i2s0-pins 
+		{
+			pinmux = <K3_PADCONF(111, 2)>, /* I2S0_SCLK */
+				     <K3_PADCONF(112, 2)>, /* I2S0_FS */
+				 	 <K3_PADCONF(113, 2)>, /* I2S0_DOUT */
+				 	 <K3_PADCONF(114, 2)>, /* I2S0_DIN */
+				 	 <K3_PADCONF(85, 2)>; /* I2S0_MCLK */
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	es8390_hp_det_cfg: es8390-hp-det-cfg 
+	{
+		es8390-hp-det-pin 
+		{
+			pinmux = <K3_PADCONF(71, 0)>;
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	es8390_phone_ctl_cfg: es8390-phone-ctl-cfg 
+	{
+		es8390-phone-ctl-pin 
+		{
+			pinmux = <K3_PADCONF(44, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+};
