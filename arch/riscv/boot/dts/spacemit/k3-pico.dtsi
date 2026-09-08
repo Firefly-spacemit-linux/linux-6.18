@@ -209,6 +209,7 @@
 	i2c1-3-cfg {
 		i2c1-0-pins {
 			power-source = <3300>;
+			drive-strength = <25>;		/* DS8 */
 		};
 	};
 
