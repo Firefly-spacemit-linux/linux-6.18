@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+/*
+ * SPCDA400 routing:
+ *   PCIe0/phy0 x2 -> M.2 NVMe SSD
+ *   PCIe2/phy2   -> RTL8125 Ethernet1 (USB3-B)
+ *   PCIe3/phy4   -> RTL8125 Ethernet0 (USB3-D), GPIO sideband 80/81/101
+ *
+ * FF_PCIE_SATAx4 is the old ASM1164 design on PCIe1/phy1 and remains off.
+ */
+#define FF_PCIE_SATAx4
+#define FF_USB30_GMAC0
+#define FF_USB30_GMAC1
+#define FF_PCIE0
+#define FF_PWM_FAN
+#define FF_RPMI_LGA
+
+#include "k3-firefly-spcda400-k3.dtsi"
+
+/ {
+	model = "spacemit SPCDA400-K3 board";
+	compatible = "spacemit,k3-com260";
+};
