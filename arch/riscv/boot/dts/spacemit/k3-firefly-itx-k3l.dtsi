@@ -157,7 +157,7 @@
 #endif
 
 
-#ifdef FF_PCIE_SSD
+#ifdef FF_PCIE_SSD_WITH_SLEEP_MODE
 	pciec_or_gamc3_sel: pciec-or-gmac3-sel {
 		compatible = "regulator-fixed";
 		regulator-name = "pciec_or_gamc3_sel";
@@ -538,7 +538,7 @@
 };
 #endif
 
-#ifdef FF_PCIE_SSD
+#if defined(FF_PCIE_SSD_WITHOUT_SLEEP_MODE) || defined(FF_PCIE_SSD_WITH_SLEEP_MODE)
 &phy2 {
 	status = "okay";
 };
@@ -1285,7 +1285,29 @@
 	};
 #endif
 
-#ifdef FF_PCIE_SSD
+#ifdef FF_PCIE_SSD_WITHOUT_SLEEP_MODE
+	pciec_or_gmac3_sel_cfg: pciec-or-gmac3-sel-cfg {
+		pciec-or-gmac3-sel-pin {
+			pinmux = <K3_PADCONF(78, 0)>;
+
+			bias-disable;			/* normal bias disable */
+			drive-strength = <25>;		/* DS8 */
+			power-source = <3300>;
+		};
+	};
+
+	pcie2-2-cfg {
+		pcie2-0-pins {
+			pinmux = <K3_PADCONF(58, 4)>;	/* pcie2 perst */
+
+			bias-pull-up;
+			drive-strength = <38>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIE_SSD_WITH_SLEEP_MODE
 	pciec_or_gmac3_sel_cfg: pciec-or-gmac3-sel-cfg {
 		pciec-or-gmac3-sel-pin {
 			pinmux = <K3_PADCONF(78, 0)>;

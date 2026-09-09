@@ -41,12 +41,13 @@
 #define FF_DSI0_V3
 #endif
 
-//default GMAC3
-#define PCIEC_OR_GMAC3 1  // 1 --> PCIE_SSD, 0 --> GMAC3
-#if PCIEC_OR_GMAC3
-#define FF_PCIE_SSD
-#else
+//default GMAC3 and PCIE_SSD
+#define PCIE_SSD_SLEEP_MODE 0  // 1 --> GMAC3_AND_PCIE_SSD, 0 --> ONLY PCIE_SSD_SLEEP_MODE WITHOUT GMAC3
+#if !PCIE_SSD_SLEEP_MODE
+#define FF_PCIE_SSD_WITHOUT_SLEEP_MODE
 #define FF_GMAC3
+#else
+#define FF_PCIE_SSD_WITH_SLEEP_MODE
 #endif
 
 //default SATA
