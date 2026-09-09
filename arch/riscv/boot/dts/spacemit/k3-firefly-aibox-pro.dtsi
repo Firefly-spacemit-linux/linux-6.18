@@ -427,8 +427,10 @@
 &rspi0 
 {
 	status = "okay";
+	clock-names = "core", "bus";
 	pinctrl-names = "default";
 	pinctrl-0 = <&rssp0_0_cfg>;
+	
 	mcp251xfd: canfd@0 
 	{
 		status = "okay";
