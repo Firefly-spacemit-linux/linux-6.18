@@ -378,7 +378,7 @@ static void k1_pcie_disable_aspm_l1(struct k1_pcie *k1)
 	/* Turn off ASPM L1 for the link */
 	dw_pcie_dbi_ro_wr_en(pci);
 	val = dw_pcie_readl_dbi(pci, offset);
-	val &= ~PCI_EXP_LNKCAP_ASPM_L1;
+	val &= ~(PCI_EXP_LNKCAP_ASPM_L0S | PCI_EXP_LNKCAP_ASPM_L1);
 	dw_pcie_writel_dbi(pci, offset, val);
 	dw_pcie_dbi_ro_wr_dis(pci);
 }
