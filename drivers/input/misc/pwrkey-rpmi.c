@@ -233,6 +233,9 @@ static int rpmi_pwrkey_probe(struct platform_device *pdev)
 		goto fail_free_channel;
 	}
 
+	report_event = 1;
+	fall_triggered = 0;
+
 	return 0;
 
 fail_free_channel:
