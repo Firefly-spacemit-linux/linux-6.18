@@ -301,22 +301,6 @@
 #endif
 
 #ifdef FF_USB30_TYPEA
-#ifdef FF_4G_5G_MODULE
-	vcc3v5_4g: vcc3v5-4g {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc3v5_4g";
-		regulator-min-microvolt = <3500000>;
-		regulator-max-microvolt = <3500000>;
-		regulator-always-on;
-		regulator-boot-on;
-		enable-active-high;
-		gpio = <&gpio K3_GPIO(33) GPIO_ACTIVE_HIGH>;
-		status = "okay";
-	};
-#endif
-#endif
-
-#ifdef FF_USB30_TYPEA
 #ifdef FF_USB30_FRONT
 	p5v_usb_rear5: p5v-usb-rear5 {
 		compatible = "regulator-fixed";
