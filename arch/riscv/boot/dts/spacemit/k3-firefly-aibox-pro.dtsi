@@ -148,20 +148,22 @@
 	};
 #endif
 
-#if defined(FF_PCIE1) || defined(FF_PCIE0)
+#if defined(FF_PCIE1) || defined(FF_PCIE0) || defined(FF_AC3V3_EN)
 	vcc3v3_pcie: vcc3v3-pcie 
 	{
-		status = "okay";
 		compatible = "regulator-fixed";
 		regulator-name = "vcc3v3_pcie";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		enable-active-high;
 		gpio = <&gpio K3_GPIO(50) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
 		pinctrl-0 = <&pcie_pwr_en_cfg>;
-        pinctrl-names = "default";
 		startup-delay-us = <5000>;
 		vin-supply = <&vcc12v_dcin>;
+		status = "okay";
 	};
 #endif
 
@@ -273,23 +275,6 @@
 		status = "okay";
 	};
 	*/
-#endif
-
-#ifdef FF_AC3V3_EN
-	vcc3v3_ac: regulator-vcc3v3-ac 
-	{
-		compatible = "regulator-fixed";
-		regulator-name = "vcc3v3_ac";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpios = <&gpio K3_GPIO(50) GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		regulator-boot-on;
-		regulator-always-on;
-		pinctrl-names = "default";
-		pinctrl-0 = <&ac3v3_pwr_en_cfg>;
-		status = "okay";
-	};
 #endif
 
 #ifdef FF_AC_FAN_PWM
@@ -1008,7 +993,7 @@
 	};
 #endif
 
-#if defined(FF_PCIE1) || defined(FF_PCIE0)
+#if defined(FF_PCIE1) || defined(FF_PCIE0) || defined(FF_AC3V3_EN)
 	pcie_pwr_en_cfg: pcie-pwr-en-cfg 
 	{
 		pcie-pwr-en-pin 
@@ -1192,19 +1177,6 @@
 		};
 	};
 	*/
-#endif
-
-#ifdef FF_AC3V3_EN
-	ac3v3_pwr_en_cfg: ac3v3-pwr-en-cfg 
-	{
-		ac3v3-pwr-en-pins 
-		{
-			pinmux = <K3_PADCONF(50, 0)>;
-			bias-disable;
-			drive-strength = <25>;
-			power-source = <3300>;
-		};
-	};
 #endif
 
 #ifdef FF_AC_FAN_PWM
