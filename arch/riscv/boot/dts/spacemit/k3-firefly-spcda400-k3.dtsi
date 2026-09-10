@@ -1,0 +1,537 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#include "k3-firefly-common.dtsi"
+
+/ {
+#ifdef FF_PCIE_SATAx4
+	/* Board-level PCIe/SATA supplies and enables. */
+	/* Keep PCIe1 on the board's always-on 3.3 V rail. */
+	pcie1_3v3: regulator-pcie1-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "pcie1_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		status = "okay";
+	};
+
+	sata0_pwr_en: regulator-sata0-pwr-en {
+		compatible = "regulator-fixed";
+		regulator-name = "sata0_pwr_en";
+		gpio = <&gpio K3_GPIO(63) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sata0_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	sata1_pwr_en: regulator-sata1-pwr-en {
+		compatible = "regulator-fixed";
+		regulator-name = "sata1_pwr_en";
+		gpio = <&gpio K3_GPIO(67) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sata1_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	sata2_pwr_en: regulator-sata2-pwr-en {
+		compatible = "regulator-fixed";
+		regulator-name = "sata2_pwr_en";
+		gpio = <&gpio K3_GPIO(70) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sata2_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	sata3_pwr_en: regulator-sata3-pwr-en {
+		compatible = "regulator-fixed";
+		regulator-name = "sata3_pwr_en";
+		gpio = <&gpio K3_GPIO(71) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sata3_pwr_en_cfg>;
+		status = "okay";
+	};
+
+	vcc12v_sata: regulator-vcc12v-sata {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc12v_sata";
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+		gpio = <&gpio K3_GPIO(87) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vcc12v_sata_en_cfg>;
+		status = "okay";
+	};
+
+#endif
+
+#ifdef FF_USB30_GMAC0
+	/* RTL8125 Ethernet0 power control: low-active board signal. */
+	rtl8125_eth0_pwr: regulator-rtl8125-eth0-pwr {
+		compatible = "regulator-fixed";
+		regulator-name = "rtl8125_eth0_pwr";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio K3_GPIO(21) GPIO_ACTIVE_LOW>;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8125_eth0_pwr_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_USB30_GMAC1
+	/* RTL8125 Ethernet1 power control: diagnostic low-active setting. */
+	rtl8125_eth1_pwr: regulator-rtl8125-eth1-pwr {
+		compatible = "regulator-fixed";
+		regulator-name = "rtl8125_eth1_pwr";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio K3_GPIO(86) GPIO_ACTIVE_LOW>;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&rtl8125_eth1_pwr_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_PCIE0
+	/* GPIO126 selects the TM13388A SSD regulator mode; GPIO88 enables it. */
+	vcc3v3ssd_mode: regulator-vcc3v3-ssd-mode {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_ssd_mode";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		gpio = <&gpio K3_GPIO(126) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vcc3v3ssd_mode_cfg>;
+		regulator-always-on;
+		regulator-boot-on;
+		status = "okay";
+	};
+
+	vcc3v3ssd: regulator-vcc3v3-ssd {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3_ssd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio K3_GPIO(88) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		startup-delay-us = <100000>;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vcc3v3ssd_cfg>;
+		status = "okay";
+	};
+	#endif
+
+	#ifdef FF_PWM_FAN
+	fan_pwm6: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&rpwm6 0 25000 0>;  /* GPIO33 / RPWM6, mux function 3, 40 kHz. */
+		/* Keep the fan spinning at the lowest thermal state. */
+		cooling-levels = <64 96 128 192 255>;
+		#cooling-cells = <2>;
+	};
+	#endif
+};
+
+&pinctrl
+{
+#ifdef FF_PCIE_SATAx4
+	spcda400_ri2c0_cfg: spcda400-ri2c0-cfg {
+		spcda400-ri2c0-pins {
+			pinmux = <K3_PADCONF(27, 6)>, /* I2C5_SCL: R.I2C0_SCL */
+				 <K3_PADCONF(28, 6)>; /* I2C5_SDA: R.I2C0_SDA */
+
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+
+	/* Known-good PCIe1 sideband group used by the working ASM1164 setup. */
+	spcda400_pcie1_cfg: spcda400-pcie1-cfg {
+		spcda400-pcie1-pins {
+			pinmux = <K3_PADCONF(90, 4)>; /* PCIe1 CLKREQ# */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	/* PI6C557 CLKREQN_M1 is driven by the K3 PCIe0 CLKREQ function. */
+	spcda400_sata_clkreq_cfg: spcda400-sata-clkreq-cfg {
+		spcda400-sata-clkreq-pin {
+			pinmux = <K3_PADCONF(110, 5)>; /* PCIE30x4_CLKREQN_M1 */
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	sata0_pwr_en_cfg: sata0-pwr-en-cfg {
+		sata0-pwr-en-pin {
+			pinmux = <K3_PADCONF(63, 0)>; /* GPIO63: SATA0_PWR_EN */
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	sata1_pwr_en_cfg: sata1-pwr-en-cfg {
+		sata1-pwr-en-pin {
+			pinmux = <K3_PADCONF(67, 0)>; /* GPIO67: SATA1_PWR_EN */
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	sata2_pwr_en_cfg: sata2-pwr-en-cfg {
+		sata2-pwr-en-pin {
+			pinmux = <K3_PADCONF(70, 0)>; /* GPIO70: SATA2_PWR_EN */
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	sata3_pwr_en_cfg: sata3-pwr-en-cfg {
+		sata3-pwr-en-pin {
+			pinmux = <K3_PADCONF(71, 0)>; /* GPIO71: SATA3_PWR_EN */
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	vcc12v_sata_en_cfg: vcc12v-sata-en-cfg {
+		vcc12v-sata-en-pin {
+			pinmux = <K3_PADCONF(87, 0)>; /* GPIO87: VCC12V_SATA_EN */
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+
+#endif
+
+#ifdef FF_USB30_GMAC0
+	rtl8125_eth0_pwr_cfg: rtl8125-eth0-pwr-cfg {
+		rtl8125-eth0-pwr-pin {
+			pinmux = <K3_PADCONF(21, 0)>; /* POW_EXT_M0 / GPIO21 */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	/* Ethernet0 sideband signals are routed as GPIOs on SPCDA400. */
+	rtl8125_eth0_sideband_cfg: rtl8125-eth0-sideband-cfg {
+		rtl8125-eth0-sideband-pins {
+			pinmux = <K3_PADCONF(80, 0)>, /* CLKREQN_M0 / GPIO80 */
+					 <K3_PADCONF(81, 0)>, /* WAKEN_M0 / GPIO81 */
+					 <K3_PADCONF(101, 0)>; /* PERSTN_M0 / GPIO101 */
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_USB30_GMAC1
+	rtl8125_eth1_pwr_cfg: rtl8125-eth1-pwr-cfg {
+		rtl8125-eth1-pwr-pin {
+			pinmux = <K3_PADCONF(86, 0)>; /* POW_EXT_M1 / GPIO86 */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#if defined(FF_USB30_GMAC0) || defined(FF_USB30_GMAC1)
+	rtl8125_isolate_cfg: rtl8125-isolate-cfg {
+		rtl8125-isolate-pins {
+			pinmux = <K3_PADCONF(8, 0)>, /* ISOLATEB_M0 / GPIO8 */
+					 <K3_PADCONF(36, 0)>; /* ISOLATEB_M1 / GPIO36 */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_PCIE0
+pcie0_cfg: pcie0-cfg {
+		pcie0-pins {
+			pinmux = <K3_PADCONF(108, 5)>, /* PCIE30x4_PERSTN_M1 -> PCIEA_PERSTn */
+				     <K3_PADCONF(109, 5)>, /* PCIE30x4_WAKEN_M1 -> PCIEA_WAKEn */
+					 <K3_PADCONF(110, 5)>; /* PCIE30x4_CLKREQN_M1 -> PCIEA_CLKREQN */
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	vcc3v3ssd_mode_cfg: vcc3v3ssd-mode-cfg {
+		vcc3v3ssd-mode-pin {
+			pinmux = <K3_PADCONF(126, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+
+	vcc3v3ssd_cfg: vcc3v3ssd-cfg {
+		vcc3v3ssd-pin {
+			pinmux = <K3_PADCONF(88, 0)>;
+
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_PWM_FAN
+	spcda400_rpwm6_cfg: spcda400-rpwm6-cfg {
+		spcda400-rpwm6-pins {
+			pinmux = <K3_PADCONF(33, 3)>;
+			bias-pull-up;
+			drive-strength = <25>;
+			power-source = <3300>;
+		};
+	};
+
+#endif
+};
+
+#if defined(FF_USB30_GMAC0) || defined(FF_USB30_GMAC1)
+&gpio {
+	pinctrl-names = "default";
+	/* GPIO hogs only own the two RTL8125 isolation controls. */
+	pinctrl-0 = <&rtl8125_isolate_cfg>;
+
+	#ifdef FF_USB30_GMAC0
+		rtl8125-eth0-isolate-hog {
+			gpio-hog;
+			gpios = <K3_GPIO(8) GPIO_ACTIVE_HIGH>;
+			output-high;
+			line-name = "rtl8125_eth0_isolateb";
+		};
+
+	#endif
+
+#ifdef FF_USB30_GMAC1
+		 rtl8125-eth1-isolate-hog {
+		gpio-hog;
+		gpios = <K3_GPIO(36) GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "rtl8125_eth1_isolateb";
+		};
+#endif
+
+};
+#endif
+
+#ifdef FF_PCIE_SATAx4
+/*
+ * The board nets are named I2C5_SCL/SDA, but K3 GPIO27/28 only expose
+ * R.I2C0 in the SoC pinmux table.  Use the RCPU controller for this route.
+ */
+&r_i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spcda400_ri2c0_cfg>;
+	status = "okay";
+};
+
+&phy1 {
+	status = "okay";
+};
+
+&pcie1_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spcda400_pcie1_cfg>;
+	phys = <&phy1>;
+	phy-names = "phy0";
+	num-lanes = <2>;
+	max-link-speed = <2>;
+	vpcie3v3-supply = <&pcie1_3v3>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_USB30_GMAC0
+
+&phy4 {
+	status = "okay";
+};
+
+/* RTL8125 Ethernet0 is connected to the PCIE4/USB3-D combo lane.
+ * On K3, this board lane is controlled by the PCIe3 root complex/PHY4.
+ */
+&pcie3_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&rtl8125_eth0_sideband_cfg>;
+	phys = <&phy4>;
+	phy-names = "phy4";
+	/* Keep PERST# deasserted with the current host initialization flow. */
+	reset-gpios = <&gpio K3_GPIO(101) GPIO_ACTIVE_HIGH>;
+	num-lanes = <1>;
+	max-link-speed = <2>;
+	vpcie3v3-supply = <&rtl8125_eth0_pwr>;
+	status = "okay";
+};
+
+/* PCIE4/PHY5 is not wired to this Ethernet connector. */
+&pcie4_rc {
+	status = "disabled";
+};
+
+/*
+ * The board-level PCIE20_0 sideband names are GPIOs.  PCIe3 owns this
+ * pinctrl state so its reset GPIO can be requested without a second pinmux
+ * owner competing for GPIO101.
+ */
+#endif
+
+#ifdef FF_USB30_GMAC1
+&phy2 {
+	status = "okay";
+};
+
+/* RTL8125 Ethernet1 is connected to the PCIe2/USB3-B combo lane. */
+&pcie2_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie2_2_cfg>;
+	phys = <&phy2>;
+	phy-names = "phy2";
+	num-lanes = <1>;
+	max-link-speed = <2>;
+	vpcie3v3-supply = <&rtl8125_eth1_pwr>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PCIE0
+&phy0 {
+	status = "okay";
+};
+
+&pcie0_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_cfg>;   /* pads 108/109/110 = PERST#/WAKE#/CLKREQ# */
+	phys = <&phy0>;
+	phy-names = "phy0";
+
+	num-lanes = <2>;
+	max-link-speed = <3>;
+	vpcie3v3-supply = <&vcc3v3ssd>;
+	status = "okay";
+};
+#endif
+
+#ifdef FF_PWM_FAN
+&rpwm6 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spcda400_rpwm6_cfg>;
+};
+
+&thermal_zones {
+	thermal_cluster0 {
+		polling-delay = <1000>;
+		polling-delay-passive = <250>;
+		thermal-sensors = <&thermal 4>;
+
+		trips {
+			thermal_cluster0_trip0: thermal_cluster0-trip0 {
+				temperature = <35000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+
+			thermal_cluster0_trip1: thermal_cluster0-trip1 {
+				temperature = <40000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip2: thermal_cluster0-trip2 {
+				temperature = <50000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip3: thermal_cluster0-trip3 {
+				temperature = <60000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+
+			thermal_cluster0_trip4: thermal_cluster0-trip4 {
+				temperature = <70000>;
+				hysteresis = <5000>;
+				type = "passive";
+			};
+		};
+
+		cooling-maps {
+			map0 {
+				trip = <&thermal_cluster0_trip0>;
+				cooling-device = <&fan_pwm6 0 0>;
+			};
+
+			map1 {
+				trip = <&thermal_cluster0_trip1>;
+				cooling-device = <&fan_pwm6 1 1>;
+			};
+
+			map2 {
+				trip = <&thermal_cluster0_trip2>;
+				cooling-device = <&fan_pwm6 2 2>;
+			};
+
+			map3 {
+				trip = <&thermal_cluster0_trip3>;
+				cooling-device = <&fan_pwm6 3 3>;
+			};
+
+			map4 {
+				trip = <&thermal_cluster0_trip4>;
+				cooling-device = <&fan_pwm6 4 4>;
+			};
+		};
+	};
+};
+#endif

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+config HOUMO_XH2A
+	tristate "Houmo XH2A PCIe accelerator driver"
+	depends on PCI && PCI_MSI && PM
+	help
+	  Enable the Houmo XH2A PCIe accelerator host driver.
+
+	  The driver creates the xh2a control, IPU, memory, I2C, QSPI and
+	  rpmsg-lite interfaces used by the Houmo userspace tools.
+
+choice
+	prompt "Houmo XH2A NOR flash type"
+	depends on HOUMO_XH2A
+	default HOUMO_XH2A_NOR_UNKNOWN
+
+config HOUMO_XH2A_NOR_UNKNOWN
+	bool "Unknown or runtime-detected NOR"
+
+config HOUMO_XH2A_NOR_MICRON
+	bool "Micron NOR"
+
+config HOUMO_XH2A_NOR_GIGADEVICE
+	bool "GigaDevice NOR"
+
+endchoice

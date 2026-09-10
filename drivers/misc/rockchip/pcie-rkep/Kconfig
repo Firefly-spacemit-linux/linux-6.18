@@ -1,0 +1,5 @@
+config PCIE_FUNC_RKEP
+  	tristate "Rockchip RK1828 PCIe endpoint function driver"
+  	depends on PCI
+  	help
+  	  Enable Rockchip RK1828 PCIe endpoint function driver.
