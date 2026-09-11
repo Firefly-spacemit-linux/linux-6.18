@@ -61,7 +61,7 @@ static const struct onboard_dev_pdata realtek_rtl8188etv_data = {
 
 static const struct onboard_dev_pdata realtek_rtl8852be_data = {
 	.reset_us = 200000,
-	.power_on_delay_us = 500000,
+	.power_on_delay_us = 0,
 	.num_supplies = 1,
 	.supply_names = { "vdd" },
 	.is_hub = false,
