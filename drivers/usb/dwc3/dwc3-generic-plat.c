@@ -243,6 +243,8 @@ static int dwc3_generic_probe(struct platform_device *pdev)
 	if (ret)
 		return dev_err_probe(dev, ret, "failed to register DWC3 Core\n");
 
+	device_enable_async_suspend(dev);
+
 	return 0;
 }
 
