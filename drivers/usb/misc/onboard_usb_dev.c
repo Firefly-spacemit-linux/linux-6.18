@@ -562,6 +562,17 @@ static struct platform_driver onboard_dev_driver = {
 		.of_match_table = onboard_dev_match,
 		.pm = pm_ptr(&onboard_dev_pm_ops),
 		.dev_groups = onboard_dev_groups,
+		/*
+		 * Power sequencing here is mostly blind delay - the
+		 * RTL8852BE entry alone waits 200ms after power on.
+		 * driver_attach() probes synchronously, so on this
+		 * driver that sequence blocks the tail of kernel init.
+		 * Probe asynchronously overlaps those waits with the
+		 * initcalls; the kernel still synchronizes async probing
+		 * before handing over to userspace, so enumeration sees
+		 * the device fully powered either way.
+		 */
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 };
 
