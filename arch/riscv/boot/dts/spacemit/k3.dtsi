@@ -5,6 +5,13 @@
 
 /* Inline SoC GPIO helper: expand a linear GPIO to <bank,offset> */
 #define K3_GPIO(x) ((x) / 32) ((x) % 32)
+
+/* Keep frequently searched metadata ahead of the large SoC subtree. */
+/ {
+	reserved-memory {};
+	aliases {};
+};
+
 #include "k3-cpus.dtsi"
 #include "k3-trace.dtsi"
 #include <dt-bindings/gpio/gpio.h>
