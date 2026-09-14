@@ -177,4 +177,9 @@ config CAN_UCAN
 	          from Theobroma Systems like the A31-µQ7 and the RK3399-Q7
 	          (https://www.theobroma-systems.com/rk3399-q7)
 
+config CAN_USBCANFD
+	tristate "USBCANFD 100U driver"
+	help
+	  none
+
 endmenu
