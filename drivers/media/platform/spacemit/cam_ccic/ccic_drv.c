@@ -297,13 +297,6 @@ static struct ccic_ctrl_ops ccic_ctrl_ops = {
 	.config_csi_path_vc = ccic_config_csi_path_vc,
 };
 
-struct ccic_async_connection {
-	struct v4l2_async_connection asc;
-	unsigned int endpoint_id;
-	unsigned int lane_num;
-	unsigned int mipi_m_bps;
-};
-
 static int ccic_async_bound(struct v4l2_async_notifier *notifier,
 			    struct v4l2_subdev *subdev,
 			    struct v4l2_async_connection *asc)
@@ -328,6 +321,8 @@ static int ccic_async_bound(struct v4l2_async_notifier *notifier,
 		ccic_dev->default_lane_num = conn->lane_num;
 	if (conn->mipi_m_bps)
 		ccic_dev->default_mipi_m_bps = conn->mipi_m_bps;
+	ccic_dev->default_dt_filter_en = conn->dt_filter_en;
+	ccic_dev->default_dt_filter0 = conn->dt_filter0;
 	ccic_dev->sensor_sd = subdev;
 	lane_num = ccic_dev->default_lane_num;
 	mipi_m_bps = ccic_dev->default_mipi_m_bps;
@@ -336,6 +331,9 @@ static int ccic_async_bound(struct v4l2_async_notifier *notifier,
 	dev_info(ccic_dev->dev,
 		 "bound sensor subdev %s endpoint %u lanes %u mipi_mbps %u\n",
 		 subdev->name, conn->endpoint_id, lane_num, mipi_m_bps);
+	if (conn->dt_filter_en)
+		dev_info(ccic_dev->dev, "default CSI-2 DT filter: 0x%02x\n",
+			 conn->dt_filter0);
 
 	return 0;
 }
@@ -346,11 +344,13 @@ static void ccic_async_unbind(struct v4l2_async_notifier *notifier,
 {
 	struct ccic_dev *ccic_dev =
 		container_of(notifier, struct ccic_dev, notifier);
-
 	mutex_lock(&ccic_dev->sensor_stream_lock);
 	mutex_lock(&ccic_dev->sensor_lock);
-	if (ccic_dev->sensor_sd == subdev)
+	if (ccic_dev->sensor_sd == subdev) {
 		ccic_dev->sensor_sd = NULL;
+		ccic_dev->default_dt_filter_en = false;
+		ccic_dev->default_dt_filter0 = 0;
+	}
 	mutex_unlock(&ccic_dev->sensor_lock);
 	mutex_unlock(&ccic_dev->sensor_stream_lock);
 }
@@ -452,6 +452,25 @@ static int ccic_async_register(struct ccic_dev *ccic_dev)
 		asc->endpoint_id = endpoint_id;
 		asc->lane_num = lane_num;
 		asc->mipi_m_bps = mipi_m_bps;
+
+		if (fwnode_property_present(ep, "spacemit,dt-filter")) {
+			ret = fwnode_property_read_u32(ep, "spacemit,dt-filter",
+						       &asc->dt_filter0);
+			if (ret) {
+				dev_err(ccic_dev->dev,
+					"failed to read spacemit,dt-filter: %d\n", ret);
+				v4l2_async_nf_cleanup(&ccic_dev->notifier);
+				return ret;
+			}
+			if (asc->dt_filter0 > 0x3f) {
+				dev_err(ccic_dev->dev,
+					"invalid CSI-2 DT filter 0x%x\n",
+					asc->dt_filter0);
+				v4l2_async_nf_cleanup(&ccic_dev->notifier);
+				return -EINVAL;
+			}
+			asc->dt_filter_en = true;
+		}
 
 		has_remote = true;
 	}

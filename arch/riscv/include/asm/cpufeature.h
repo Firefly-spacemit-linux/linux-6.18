@@ -92,6 +92,7 @@ static inline bool misaligned_traps_can_delegate(void)
 #endif
 
 bool __init check_vector_unaligned_access_emulated_all_cpus(void);
+bool riscv_has_hcontext(void);
 #if defined(CONFIG_RISCV_VECTOR_MISALIGNED)
 void check_vector_unaligned_access_emulated(struct work_struct *work __always_unused);
 DECLARE_PER_CPU(long, vector_misaligned_access);

@@ -26,6 +26,7 @@ static struct irq_domain *affi_domain = NULL;
 static int irq_affinity_suspend(struct device *dev)
 {
 	struct irq_data *d;
+	struct irq_desc *desc;
 	struct imsic_vector *vec;
 	int irq, i = 0;
 
@@ -51,6 +52,14 @@ static int irq_affinity_suspend(struct device *dev)
 
 		irqaff[i].irq = irq;
 		irqaff[i].cpu = vec->cpu;
+
+#ifdef CONFIG_GENERIC_PENDING_IRQ
+		desc = irq_to_desc(irq);
+		if (desc && irqd_is_setaffinity_pending(&desc->irq_data) &&
+		    !cpumask_empty(desc->pending_mask))
+			irqaff[i].cpu = cpumask_first(desc->pending_mask);
+#endif
+
 		i++;
 	}
 
@@ -61,16 +70,34 @@ static int irq_affinity_suspend(struct device *dev)
 
 static int irq_affinity_resume(struct device *dev)
 {
-	int i, err;
+	int i, err, ret = 0;
+	int success_count = 0;
+	int failed_count = 0;
+
+	if (!irqaff)
+		return 0;
 
 	for (i = 0; i < active_irq_num; i++) {
 		err = irq_set_affinity(irqaff[i].irq, cpumask_of(irqaff[i].cpu));
 		if (err) {
-			pr_err("IRQ%u migrate to cpu%u failed\n", irqaff[i].irq, irqaff[i].cpu);
+			pr_err("IRQ%u migrate to cpu%u failed: %d\n",
+			       irqaff[i].irq, irqaff[i].cpu, err);
+			failed_count++;
+			ret = err;  /* Keep last error code */
+		} else {
+			success_count++;
 		}
 	}
 
-	return 0;
+	if (failed_count > 0) {
+		pr_err("IRQ affinity restore: %d succeeded, %d failed (total %d)\n",
+		       success_count, failed_count, active_irq_num);
+	}
+
+	kfree(irqaff);
+	irqaff = NULL;
+
+	return ret;
 }
 
 static const struct dev_pm_ops irq_affinity_pm_ops = {

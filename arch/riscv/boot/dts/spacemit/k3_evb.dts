@@ -1260,6 +1260,13 @@
 		vdd-supply = <&aldo3>;
 		pwdn-gpios = <&gpio 1 18 GPIO_ACTIVE_HIGH>;
 		status = "okay";
+
+		port {
+			ov5647_0_out: endpoint {
+				data-lanes = <1 2>;
+				link-frequencies = /bits/ 64 <204167000>;
+			};
+		};
 	};
 };
 
@@ -1276,6 +1283,13 @@
 		vdd-supply = <&aldo3>;
 		pwdn-gpios = <&gpio 1 10 GPIO_ACTIVE_HIGH>;
 		status = "okay";
+
+		port {
+			ov5647_1_out: endpoint {
+				data-lanes = <1 2>;
+				link-frequencies = /bits/ 64 <204167000>;
+			};
+		};
 	};
 };
 
@@ -1291,6 +1305,13 @@
 		vdd-supply = <&aldo3>;
 		pwdn-gpios = <&gpio 1 13 GPIO_ACTIVE_HIGH>;
 		status = "okay";
+
+		port {
+			imx219_out: endpoint {
+				data-lanes = <1 2>;
+				link-frequencies = /bits/ 64 <456000000>;
+			};
+		};
 	};
 };
 
@@ -1558,4 +1579,29 @@
 
 &csiphy2 {
 	status = "okay";
+};
+
+&ov5647_0_out {
+	remote-endpoint = <&ccic0_in>;
+};
+
+&ov5647_1_out {
+	remote-endpoint = <&ccic1_in>;
+};
+
+&imx219_out {
+	remote-endpoint = <&ccic2_in>;
+};
+
+&ccic0_in {
+	remote-endpoint = <&ov5647_0_out>;
+};
+
+&ccic1_in {
+	remote-endpoint = <&ov5647_1_out>;
+};
+
+&ccic2_in {
+	remote-endpoint = <&imx219_out>;
+	spacemit,dt-filter = <0x2b>;
 };

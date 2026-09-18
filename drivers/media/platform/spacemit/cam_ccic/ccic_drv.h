@@ -151,6 +151,15 @@ enum ccic_dma_sel {
 	CCIC_DMA_SEL_REMOTE_VCDT,
 };
 
+struct ccic_async_connection {
+	struct v4l2_async_connection asc;
+	unsigned int endpoint_id;
+	unsigned int lane_num;
+	unsigned int mipi_m_bps;
+	bool dt_filter_en;
+	u32 dt_filter0;
+};
+
 struct ccic_dev {
 	//struct miscdevice mdev;
 	char name[32];
@@ -188,6 +197,8 @@ struct ccic_dev {
 	bool notifier_registered;
 	unsigned int default_lane_num;
 	unsigned int default_mipi_m_bps;
+	bool default_dt_filter_en;
+	unsigned int default_dt_filter0;
 	void *vnode;
 	void *path_vnode[PATH_NUM_PER_DEV];
 

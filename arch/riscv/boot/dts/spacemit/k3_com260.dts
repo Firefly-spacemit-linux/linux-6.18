@@ -146,6 +146,7 @@
 
 &ccic0_in {
 	remote-endpoint = <&imx219_out>;
+	spacemit,dt-filter = <0x2b>;
 };
 
 &ccic2_in {

@@ -316,6 +316,7 @@
 		clock-names = "func", "bus";
 		clock-frequency = <400000>;
 		resets = <&syscon_rcpu_i2cctrl RESET_RCPU_I2CCTRL_RI2C0>;
+		power-domains = <&power K3_PMU_DUMMY_PWR_DOMAIN>;
 		status = "disabled";
 	};
 
@@ -331,6 +332,7 @@
 		clock-names = "func", "bus";
 		clock-frequency = <400000>;
 		resets = <&syscon_rcpu_i2cctrl RESET_RCPU_I2CCTRL_RI2C1>;
+		power-domains = <&power K3_PMU_DUMMY_PWR_DOMAIN>;
 		status = "disabled";
 	};
 
