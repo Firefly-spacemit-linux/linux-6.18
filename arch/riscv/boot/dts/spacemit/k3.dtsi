@@ -2356,19 +2356,7 @@
 
 			iommu-map = <0x0 &iommu 0x00000 0x10000>;
 
-			#interrupt-cells = <1>;
-			interrupt-map-mask = <0 0 0 0x7>;
-			interrupt-map = <0000 0 0 1 &pcie0_intc 1>, /* int_a */
-					<0000 0 0 2 &pcie0_intc 2>, /* int_b */
-					<0000 0 0 3 &pcie0_intc 3>, /* int_c */
-					<0000 0 0 4 &pcie0_intc 4>; /* int_d */
 			status = "disabled";
-			pcie0_intc: interrupt-controller@0 {
-				interrupt-controller;
-				reg = <0 0 0 0 0>;
-				#address-cells = <0>;
-				#interrupt-cells = <1>;
-			};
 		};
 
 		pcie1_rc: pcie@80400000 {
@@ -2410,19 +2398,7 @@
 
 			iommu-map = <0x0 &iommu 0x10000 0x10000>;
 
-			#interrupt-cells = <1>;
-			interrupt-map-mask = <0 0 0 0x7>;
-			interrupt-map = <0000 0 0 1 &pcie1_intc 1>, /* int_a */
-					<0000 0 0 2 &pcie1_intc 2>, /* int_b */
-					<0000 0 0 3 &pcie1_intc 3>, /* int_c */
-					<0000 0 0 4 &pcie1_intc 4>; /* int_d */
 			status = "disabled";
-			pcie1_intc: interrupt-controller@0 {
-				interrupt-controller;
-				reg = <0 0 0 0 0>;
-				#address-cells = <0>;
-				#interrupt-cells = <1>;
-			};
 		};
 
 		pcie2_rc: pcie@80800000 {
@@ -2464,19 +2440,7 @@
 
 			iommu-map = <0x0 &iommu 0x20000 0x10000>;
 
-			#interrupt-cells = <1>;
-			interrupt-map-mask = <0 0 0 0x7>;
-			interrupt-map = <0000 0 0 1 &pcie2_intc 1>, /* int_a */
-					<0000 0 0 2 &pcie2_intc 2>, /* int_b */
-					<0000 0 0 3 &pcie2_intc 3>, /* int_c */
-					<0000 0 0 4 &pcie2_intc 4>; /* int_d */
 			status = "disabled";
-			pcie2_intc: interrupt-controller@0 {
-				interrupt-controller;
-				reg = <0 0 0 0 0>;
-				#address-cells = <0>;
-				#interrupt-cells = <1>;
-			};
 		};
 
 		pcie3_rc: pcie@80c00000 {
@@ -2515,20 +2479,7 @@
 			msi-parent = <&simsic>;
 			spacemit,pcie-port = <3>;
 			spacemit,apmu = <&syscon_apmu 0x1e0>;
-
-			#interrupt-cells = <1>;
-			interrupt-map-mask = <0 0 0 0x7>;
-			interrupt-map = <0000 0 0 1 &pcie3_intc 1>, /* int_a */
-					<0000 0 0 2 &pcie3_intc 2>, /* int_b */
-					<0000 0 0 3 &pcie3_intc 3>, /* int_c */
-					<0000 0 0 4 &pcie3_intc 4>; /* int_d */
 			status = "disabled";
-			pcie3_intc: interrupt-controller@0 {
-				interrupt-controller;
-				reg = <0 0 0 0 0>;
-				#address-cells = <0>;
-				#interrupt-cells = <1>;
-			};
 		};
 
 		pcie4_rc: pcie@81000000 {
@@ -2567,20 +2518,7 @@
 			msi-parent = <&simsic>;
 			spacemit,pcie-port = <4>;
 			spacemit,apmu = <&syscon_apmu 0x1e8>;
-
-			#interrupt-cells = <1>;
-			interrupt-map-mask = <0 0 0 0x7>;
-			interrupt-map = <0000 0 0 1 &pcie4_intc 1>, /* int_a */
-					<0000 0 0 2 &pcie4_intc 2>, /* int_b */
-					<0000 0 0 3 &pcie4_intc 3>, /* int_c */
-					<0000 0 0 4 &pcie4_intc 4>; /* int_d */
 			status = "disabled";
-			pcie4_intc: interrupt-controller@0 {
-				interrupt-controller;
-				reg = <0 0 0 0 0>;
-				#address-cells = <0>;
-				#interrupt-cells = <1>;
-			};
 		};
 
 		pcie0_ep: pcie_ep@80000000 {
