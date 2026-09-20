@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2025 Spacemit, Inc */
+
+#define FF_RPMI_LGA // CORE-K3L must define this
+#define FF_WIFI_BT // M.2
+#define FF_FAN
+#define FF_TYPE_C
+#define FF_LEDS
+#define FF_SPI_NOR
+#define FF_SDCARD
+#define FF_PCIEX16_SLOT
+#define FF_WATCHDOG
+#define FF_RTC
+#define FF_USB30_TYPEA
+#define FF_USB20_TYPEA
+#define FF_4G_5G_MODULE //need to define FF_USB30_TYPEA
+#define FF_USB30_FRONT //need to define FF_USB30_TYPEA
+#define FF_KEY
+#define FF_ES8390
+#define FF_GMAC0
+#define FF_GMAC1
+#define FF_GMAC2
+#define FF_UART0
+#define FF_CAM_CSI0_IMX415
+#define FF_CAM_CSI1_IMX415
+#define FF_CAM_CSI2_IMX415
+#define FF_PCA955X
+#define FF_RS232_1 // R-UART3
+#define FF_RS232_2 // R-UART0
+#define FF_RS485_1 // UART6
+#define FF_RS485_2 // UART1
+#define FF_CAN_1
+#define FF_CAN_2
+#define FF_DP1
+
+//default HDMI0
+#define HDMI0_OR_DSI0 1 // 1 --> HDMI0, 0 --> DSI0
+#if HDMI0_OR_DSI0
+#define FF_HDMI0 // DP0 TO HDMI0
+#else
+#define FF_DSI0_V3
+#endif
+
+//default GMAC3 and PCIE_SSD
+#define PCIE_SSD_SLEEP_MODE 0  // 1 --> GMAC3_AND_PCIE_SSD, 0 --> ONLY PCIE_SSD_SLEEP_MODE WITHOUT GMAC3
+#if !PCIE_SSD_SLEEP_MODE
+#define FF_PCIE_SSD_WITHOUT_SLEEP_MODE
+#define FF_GMAC3
+#else
+#define FF_PCIE_SSD_WITH_SLEEP_MODE
+#endif
+
+//default SATA
+#define PCIE_OR_SATA 1 // 1 --> PCIEX16_SLOT, 0 --> SATA
+#if !PCIE_OR_SATA
+#define FF_SATA_SSD // PCIE TO SATA
+#endif
+
+#ifdef FF_PCA955X
+#define FF_PCA9555_1
+#define FF_PCA9555_2
+#endif
+
+#include "k3-firefly-itx-k3l.dtsi"
+
+#include "k3-camera.dtsi"
+#ifdef FF_CAM_CSI0_IMX415
+#ifdef FF_PCA955X
+#include "k3-firefly-itx-k3l-csi0-imx415.dtsi"
+#endif
+#endif
+
+#ifdef FF_CAM_CSI1_IMX415
+#ifdef FF_PCA955X
+#include "k3-firefly-itx-k3l-csi1-imx415.dtsi"
+#endif
+#endif
+
+#ifdef FF_CAM_CSI2_IMX415
+#ifdef FF_PCA955X
+#include "k3-firefly-itx-k3l-csi2-imx415.dtsi"
+#endif
+#endif
+
+#ifdef FF_DSI0_V3
+#ifdef FF_PCA955X
+#include "lcd_dsi_panel.dtsi"
+#include "k3-firefly-itx-k3l-dsi0-mipi101-BSD1218-A101KL68.dtsi"
+#endif
+#endif
+
+/ {
+	model = "Spacemit ITX-K3L-PCIEX16-SLOT board";
+	compatible = "spacemit,k3-com260";
+};
