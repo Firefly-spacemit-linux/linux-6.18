@@ -1282,6 +1282,18 @@ static struct platform_driver ufs_spacemit_platform_driver = {
 		.name	= "ufshcd-spacemit",
 		.pm	= &ufs_spacemit_pm_ops,
 		.of_match_table = of_match_ptr(ufs_spacemit_of_match),
+		/*
+		 * Host init is several hundred ms of M-PHY/UniPro link startup
+		 * that has no reason to serialize with the remaining device
+		 * initcalls. Probing asynchronously measured ~320ms off the
+		 * kernel boot time on K3 (3/3 runs, A/B interleaved).
+		 *
+		 * This is the root device, but async probing is still safe:
+		 * prepare_namespace() calls wait_for_device_probe(), which
+		 * does async_synchronize_full(), before looking for the root
+		 * device - with or without an initramfs.
+		 */
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 };
 module_platform_driver(ufs_spacemit_platform_driver);

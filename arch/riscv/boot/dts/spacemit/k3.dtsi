@@ -5,6 +5,13 @@
 
 /* Inline SoC GPIO helper: expand a linear GPIO to <bank,offset> */
 #define K3_GPIO(x) ((x) / 32) ((x) % 32)
+
+/* Keep frequently searched metadata ahead of the large SoC subtree. */
+/ {
+	reserved-memory {};
+	aliases {};
+};
+
 #include "k3-cpus.dtsi"
 #include "k3-trace.dtsi"
 #include <dt-bindings/gpio/gpio.h>
@@ -512,8 +519,9 @@
 			reg = <0x0 0xd4017000 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART0>,
 				 <&syscon_apbc CLK_APBC_UART0_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART0>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -530,8 +538,9 @@
 			reg = <0x0 0xf0612000 0x0 0x100>;
 			clocks = <&syscon_apbc2 CLK_APBC2_SEC_UART1>,
 				 <&syscon_apbc2 CLK_APBC2_SEC_UART1_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc2 RESET_APBC2_SEC_UART1>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -548,8 +557,9 @@
 			reg = <0x0 0xd4017100 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART2>,
 				 <&syscon_apbc CLK_APBC_UART2_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART2>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -566,8 +576,9 @@
 			reg = <0x0 0xd4017200 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART3>,
 				 <&syscon_apbc CLK_APBC_UART3_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART3>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -584,8 +595,9 @@
 			reg = <0x0 0xd4017300 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART4>,
 				 <&syscon_apbc CLK_APBC_UART4_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART4>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -602,8 +614,9 @@
 			reg = <0x0 0xd4017400 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART5>,
 				 <&syscon_apbc CLK_APBC_UART5_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART5>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -620,8 +633,9 @@
 			reg = <0x0 0xd4017500 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART6>,
 				 <&syscon_apbc CLK_APBC_UART6_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART6>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -638,8 +652,9 @@
 			reg = <0x0 0xd4017600 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART7>,
 				 <&syscon_apbc CLK_APBC_UART7_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART7>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -656,8 +671,9 @@
 			reg = <0x0 0xd4017700 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART8>,
 				 <&syscon_apbc CLK_APBC_UART8_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART8>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -674,8 +690,9 @@
 			reg = <0x0 0xd4017800 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART9>,
 				 <&syscon_apbc CLK_APBC_UART9_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART9>;
 			reg-shift = <2>;
 			reg-io-width = <4>;
@@ -692,8 +709,9 @@
 			reg = <0x0 0xd401f000 0x0 0x100>;
 			clocks = <&syscon_apbc CLK_APBC_UART10>,
 				 <&syscon_apbc CLK_APBC_UART10_BUS>,
-				 <&syscon_mpmu CLK_MPMU_SLOW_UART>;
-			clock-names = "core", "bus", "gate";
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART>,
+				 <&syscon_mpmu CLK_MPMU_SLOW_UART2>;
+			clock-names = "core", "bus", "gate", "var";
 			resets = <&syscon_apbc RESET_APBC_UART10>;
 			reg-shift = <2>;
 			reg-io-width = <4>;

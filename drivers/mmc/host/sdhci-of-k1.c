@@ -569,7 +569,8 @@ static const struct sdhci_pltfm_data spacemit_sdhci_k1_pdata = {
 		  SDHCI_QUIRK_BROKEN_CARD_DETECTION |
 		  SDHCI_QUIRK_BROKEN_TIMEOUT_VAL,
 	.quirks2 = SDHCI_QUIRK2_BROKEN_64_BIT_DMA |
-		   SDHCI_QUIRK2_PRESET_VALUE_BROKEN,
+		   SDHCI_QUIRK2_PRESET_VALUE_BROKEN |
+		   SDHCI_QUIRK2_ACMD23_BROKEN,
 };
 
 static const struct sdhci_pltfm_data spacemit_sdhci_k3_pdata = {
@@ -580,7 +581,8 @@ static const struct sdhci_pltfm_data spacemit_sdhci_k3_pdata = {
 		  SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN |
 		  SDHCI_QUIRK_BROKEN_CARD_DETECTION |
 		  SDHCI_QUIRK_BROKEN_TIMEOUT_VAL,
-	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN,
+	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN |
+		   SDHCI_QUIRK2_ACMD23_BROKEN,
 };
 
 static const struct of_device_id spacemit_sdhci_of_match[] = {

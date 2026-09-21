@@ -681,6 +681,8 @@ static int spacemit_ethqos_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
+	device_enable_async_suspend(&pdev->dev);
+
 	return 0;
 }
 

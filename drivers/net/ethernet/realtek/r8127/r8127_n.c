@@ -94,6 +94,10 @@
 #include <linux/seq_file.h>
 #endif
 
+#ifdef CONFIG_SPACEMIT_HMP
+#include <linux/soc/spacemit/spacemit-hmp.h>
+#endif
+
 #define FIRMWARE_8127_1		"rtl_nic/rtl8127-1.fw"
 #define FIRMWARE_8127_2		"rtl_nic/rtl8127-2.fw"
 
@@ -14624,6 +14628,77 @@ static void rtl8127_free_irq(struct rtl8127_private *tp)
         }
 }
 
+static bool rtl8127_is_rx_queue_vector(struct rtl8127_private *tp, int vector)
+{
+        u32 qnum;
+
+        return rtl8127_vec_2_rx_q_num(tp, vector, &qnum) &&
+               qnum < tp->num_rx_rings;
+}
+
+static void rtl8127_set_rx_irq_affinity(struct rtl8127_private *tp)
+{
+#ifdef CONFIG_SPACEMIT_HMP
+        cpumask_t regular_cpus, unused;
+        const struct cpumask *mask;
+        unsigned int irq;
+        int cpu;
+        int i;
+
+        if (!(tp->features & RTL_FEATURE_MSIX) ||
+            tp->HwCurrIsrVer <= 1)
+                return;
+
+        if (hmp_get_cpumask(&regular_cpus, HMP_REGULAR))
+                return;
+
+        cpumask_and(&regular_cpus, &regular_cpus, cpu_online_mask);
+
+        if (cpumask_weight(&regular_cpus) <= 1)
+                return;
+
+        cpumask_copy(&unused, &regular_cpus);
+
+        for (i = 0; i < tp->irq_nvecs; i++) {
+                if (!rtl8127_is_rx_queue_vector(tp, i))
+                        continue;
+
+                /* Start a new round after all regular CPUs are used. */
+                if (cpumask_empty(&unused))
+                        cpumask_copy(&unused, &regular_cpus);
+
+                irq = tp->irq_tbl[i].vector;
+
+                /*
+                 * On SpacemiT, the effective affinity contains the CPU
+                 * actually assigned to this IRQ by IMSIC.
+                 */
+                mask = irq_get_effective_affinity_mask(irq);
+                if (!mask || cpumask_empty(mask))
+                        continue;
+
+                cpu = cpumask_first(mask);
+                /* Prefer the kernel-assigned CPU if it is still unused. */
+                if (cpumask_test_cpu(cpu, &unused)) {
+                        cpumask_clear_cpu(cpu, &unused);
+                        continue;
+                }
+
+                /* Otherwise move the IRQ to an unused regular CPU. */
+                cpu = cpumask_first(&unused);
+                if (irq_set_affinity(irq, cpumask_of(cpu))) {
+                        netdev_warn(tp->dev,
+                                    "failed to set RX IRQ %u affinity to CPU %d\n",
+                                    irq, cpu);
+                        continue;
+                }
+                cpumask_clear_cpu(cpu, &unused);
+        }
+#else
+        (void)tp;
+#endif
+}
+
 static int rtl8127_alloc_irq(struct rtl8127_private *tp)
 {
         struct net_device *dev = tp->dev;
@@ -14687,6 +14762,8 @@ static int rtl8127_alloc_irq(struct rtl8127_private *tp)
 #endif
         if (rc)
                 rtl8127_free_irq(tp);
+        else
+                rtl8127_set_rx_irq_affinity(tp);
 
         return rc;
 }

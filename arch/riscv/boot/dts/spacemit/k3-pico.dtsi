@@ -107,12 +107,6 @@
 		 * restarts, and reserve headroom by limiting the highest state.
 		 */
 		cooling-levels = <60 75 90 105 120 149 170 191 213>;
-		/*
-		 * Apply 40% duty for at least three seconds when starting from
-		 * a stopped state, including boot and resume.
-		 */
-		fan-stop-to-start-percent = <40>;
-		fan-stop-to-start-us = <3000000>;
 		#cooling-cells = <2>;
 	};
 
@@ -209,6 +203,7 @@
 	i2c1-3-cfg {
 		i2c1-0-pins {
 			power-source = <3300>;
+			drive-strength = <25>;		/* DS8 */
 		};
 	};
 

@@ -4,8 +4,8 @@
 #include "k3_com260.dtsi"
 
 / {
-	model = "SpacemiT K3 Com260 Kit V02";
-	compatible = "spacemit,k3-com260-kit-v02";
+	model = "SpacemiT K3 CoM260 Kit V02";
+	compatible = "spacemit,k3-com260-kit-v02", "spacemit,k3-com260", "spacemit,k3";
 
 	rfkill-pcie-wlan {
 		compatible = "rfkill-gpio";

@@ -4,8 +4,8 @@
 #include "k3-pico.dtsi"
 
 / {
-	model = "SpacemiT K3 Pico ITX";
-	compatible = "spacemit,k3-pico-itx";
+	model = "SpacemiT K3 Pico-ITX";
+	compatible = "spacemit,k3-pico-itx", "spacemit,k3";
 
 	hub_vbus: hub-vbus {
 		compatible = "regulator-fixed";

@@ -31,6 +31,7 @@ struct of_serial_info {
 	int line;
 	struct notifier_block clk_notifier;
 #ifdef CONFIG_SOC_SPACEMIT
+	struct clk *var_clk;	/* variable clk for uncommon baud rate */
 	struct work_struct clk_work;	/* Deferred clock update work */
 #endif
 };
@@ -100,10 +101,12 @@ static unsigned long spacemit_acpu_match_clk_rate(struct device *dev, unsigned i
 	case 921600:
 	case 1152000:
 	case 1800000:
-	case 2000000:
 	case 3500000:
 	case 3600000:
 		return 57600000;
+	case 2000000:
+	case 4000000:
+		return 64000000;
 	default:
 		dev_warn(dev, "Baudrate: %d is unsupported", baud);
 		return 14700000;
@@ -145,6 +148,23 @@ static void spacemit_8250_set_termios(struct uart_port *port, struct ktermios *t
 	} else {
 		/* ACPU: Use fixed lookup table */
 		target_rate = spacemit_acpu_match_clk_rate(&pdev->dev, baud);
+
+		/*
+		 * if target rate is not 14.7M or 57.6M,
+		 * switch the variable clk freq to target rate
+		 * and switch uart clk source
+		 */
+		if ((target_rate != 14700000) && (target_rate != 57600000)) {
+			if (info->var_clk == NULL) {
+				dev_warn(&pdev->dev, "uart clkrate %lu not support, please check dtb file\n", target_rate);
+				port->uartclk = clk_get_rate(info->clk);
+				goto out;
+			} else {
+				ret = clk_set_rate(info->var_clk, target_rate);
+				if (ret < 0)
+					goto out;
+			}
+		}
 
 		ret = clk_set_rate(info->clk, target_rate);
 		if (ret < 0)
@@ -265,6 +285,14 @@ static int of_platform_serial_setup(struct platform_device *ofdev,
 			ret = dev_err_probe(dev, PTR_ERR(info->clk), "failed to get clock\n");
 			goto err_pmruntime;
 		}
+
+#ifdef CONFIG_SOC_SPACEMIT
+		info->var_clk = devm_clk_get_optional(dev, "var");
+		if (IS_ERR(info->var_clk)) {
+			ret = dev_err_probe(dev, PTR_ERR(info->var_clk), "failed to get var clock\n");
+			goto err_pmruntime;
+		}
+#endif
 
 		port->uartclk = clk_get_rate(info->clk);
 	}
