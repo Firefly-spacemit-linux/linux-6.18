@@ -11,6 +11,7 @@
 #define FF_WATCHDOG
 #define FF_SPI_CAN
 #define FF_USB30_TYPEA
+#define FF_USB20_HOST
 #define FF_4G_5G_MODULE
 #define FF_PCIE1
 #define FF_PCIE0

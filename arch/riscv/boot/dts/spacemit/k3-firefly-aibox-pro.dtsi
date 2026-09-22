@@ -130,7 +130,9 @@
 		pinctrl-0 = <&g4_5g_pwr_en_cfg>;
 		status = "okay";
 	};
+#endif
 
+#if defined(FF_4G_5G_MODULE) || defined(FF_USB20_HOST)
 	vcc5v0_hub20_4g: regulator-vcc5v0-hub20-4g 
 	{
 		compatible = "regulator-fixed";
@@ -144,6 +146,24 @@
 		vin-supply = <&vcc5v0_sys>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&hub20_pwr_en_4g_cfg>;
+		status = "okay";
+	};
+#endif
+
+#ifdef FF_USB20_HOST
+	vcc5v0_usb20_host: regulator-vcc5v0-usb20-host 
+	{
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_usb20_host";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpios = <&gpio K3_GPIO(102) GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		vin-supply = <&vcc5v0_sys>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb20_host_pwr_en_cfg>;
 		status = "okay";
 	};
 #endif
@@ -980,12 +1000,27 @@
 			power-source = <1800>;
 		};
 	};
+#endif
 
+#if defined(FF_4G_5G_MODULE) || defined(FF_USB20_HOST) 
 	hub20_pwr_en_4g_cfg: hub20-pwr-en-4g-cfg 
 	{
 		hub20-pwr-en-pins 
 		{
 			pinmux = <K3_PADCONF(104, 0)>;
+			bias-disable;
+			drive-strength = <25>;
+			power-source = <1800>;
+		};
+	};
+#endif
+
+#ifdef FF_USB20_HOST
+	usb20_host_pwr_en_cfg: usb20-host-pwr-en-cfg 
+	{
+		usb20-host-pwr-en-pins 
+		{
+			pinmux = <K3_PADCONF(102, 0)>;
 			bias-disable;
 			drive-strength = <25>;
 			power-source = <1800>;
