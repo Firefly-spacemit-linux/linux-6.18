@@ -11,6 +11,7 @@
 
 #include <linux/module.h>
 #include <linux/clk-provider.h>
+#include <linux/delay.h>
 #include <linux/i2c.h>
 #include <linux/bcd.h>
 #include <linux/rtc.h>
@@ -78,6 +79,7 @@
 struct hym8563 {
 	struct i2c_client	*client;
 	struct rtc_device	*rtc;
+	bool			spacemit_p1;
 #ifdef CONFIG_COMMON_CLK
 	struct clk_hw		clkout_hw;
 #endif
@@ -406,21 +408,38 @@ static struct clk *hym8563_clkout_register_clk(struct hym8563 *hym8563)
 #endif
 
 /*
- * The alarm interrupt is implemented as a level-low interrupt in the
- * hym8563, while the timer interrupt uses a falling edge.
- * We don't use the timer at all, so the interrupt is requested to
- * use the level-low trigger.
+ * HYM8563 asserts INT low when AF is set. The board may route this
+ * signal to an edge-triggered GPIO interrupt; AF is cleared by the
+ * threaded handler after the optional P1 pulse interval.
  */
 static irqreturn_t hym8563_irq(int irq, void *dev_id)
 {
-	struct hym8563 *hym8563 = (struct hym8563 *)dev_id;
+	struct hym8563 *hym8563 = dev_id;
 	struct i2c_client *client = hym8563->client;
 	int data, ret;
 
+	data = i2c_smbus_read_byte_data(client, HYM8563_CTL2);
+	if (data < 0) {
+		dev_err(&client->dev, "%s: error reading i2c data %d\n",
+			__func__, data);
+		return IRQ_NONE;
+	}
+
+	if (!(data & HYM8563_CTL2_AF))
+		return IRQ_NONE;
+
+	rtc_update_irq(hym8563->rtc, 1, RTC_IRQF | RTC_AF);
+
+	/*
+	 * HYM8563 keeps INT asserted while AF is set.  The P1 power-on
+	 * path requires the line to remain low for one second.
+	 */
+	if (hym8563->spacemit_p1)
+		msleep(1000);
+
 	rtc_lock(hym8563->rtc);
 
-	/* Clear the alarm flag */
-
+	/* Clear the alarm flag after the optional P1 pulse interval. */
 	data = i2c_smbus_read_byte_data(client, HYM8563_CTL2);
 	if (data < 0) {
 		dev_err(&client->dev, "%s: error reading i2c data %d\n",
@@ -514,6 +533,8 @@ static int hym8563_probe(struct i2c_client *client)
 		return PTR_ERR(hym8563->rtc);
 
 	hym8563->client = client;
+	hym8563->spacemit_p1 = device_property_read_bool(&client->dev,
+							"spacemit,p1");
 	i2c_set_clientdata(client, hym8563);
 
 	ret = hym8563_init_device(client);
@@ -523,7 +544,7 @@ static int hym8563_probe(struct i2c_client *client)
 	}
 
 	if (client->irq > 0) {
-		unsigned long irqflags = IRQF_TRIGGER_LOW;
+		unsigned long irqflags = IRQF_TRIGGER_FALLING;
 
 		if (dev_fwnode(&client->dev))
 			irqflags = 0;

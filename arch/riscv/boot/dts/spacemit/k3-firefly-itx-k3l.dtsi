@@ -385,7 +385,8 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&hym8563_int_cfg>;
 		interrupt-parent = <&gpio>;
-		interrupts = <K3_GPIO(41) IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <K3_GPIO(41) IRQ_TYPE_EDGE_FALLING>;
+		spacemit,p1;
 		wakeup-source;
 		status = "okay";
 	};

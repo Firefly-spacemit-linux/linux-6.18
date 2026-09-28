@@ -29,6 +29,10 @@ properties:
   wakeup-source:
     description: Enables wake up of host system on alarm.
 
+  spacemit,p1:
+    description: Keep the alarm interrupt asserted low for one second for SpacemiT P1 power-on.
+    type: boolean
+
 allOf:
   - $ref: rtc.yaml
 
