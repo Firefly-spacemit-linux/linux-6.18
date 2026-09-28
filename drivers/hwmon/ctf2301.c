@@ -9,6 +9,7 @@
 #include <linux/hwmon.h>
 #include <linux/i2c.h>
 #include <linux/module.h>
+#include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/regmap.h>
 #include <linux/thermal.h>
@@ -46,6 +47,9 @@
 #define PWM_DEFAULT_FREQ_CODE			0x17
 #define CTF2301_PWM_MAX				255
 
+/* Keep the PWM engine enabled during normal thermal-control idle periods. */
+#define CTF2301_IDLE_PWM			8
+
 
 struct ctf2301 {
 	struct i2c_client *client;
@@ -55,6 +59,8 @@ struct ctf2301 {
 
 	unsigned int pwm_freq_code;
 	unsigned int pwm_save;		/* Saved PWM value for suspend/resume */
+	unsigned int pwm_value;		/* Logical PWM value requested by users */
+	struct mutex pwm_lock;
 	bool temp_signed;
 };
 
@@ -134,13 +140,41 @@ static int ctf2301_read_fan(struct device *dev, u32 attr, long *val)
 
 static int ctf2301_update_pwm(struct ctf2301 *data, long val)
 {
-	int map_val;
+	int map_val, ret;
+	long requested = clamp_val(val, 0, CTF2301_PWM_MAX);
 
-	val = clamp_val(val, 0, CTF2301_PWM_MAX);
+	/* Avoid a hard 0 -> non-zero restart, which causes a full-speed kick. */
+	val = requested ? requested : CTF2301_IDLE_PWM;
 
 	map_val = (val * data->pwm_freq_code * 2) / CTF2301_PWM_MAX;
+	if (val && !map_val)
+		map_val = 1;
 
-	return regmap_write(data->regmap, CTF2301_PWM_VALUE, map_val);
+	mutex_lock(&data->pwm_lock);
+	ret = regmap_write(data->regmap, CTF2301_PWM_VALUE, map_val);
+	if (!ret)
+		data->pwm_value = requested;
+	mutex_unlock(&data->pwm_lock);
+
+	return ret;
+}
+
+static int ctf2301_force_pwm(struct ctf2301 *data, long val)
+{
+	int map_val, ret;
+
+	val = clamp_val(val, 0, CTF2301_PWM_MAX);
+	map_val = (val * data->pwm_freq_code * 2) / CTF2301_PWM_MAX;
+	if (val && !map_val)
+		map_val = 1;
+
+	mutex_lock(&data->pwm_lock);
+	ret = regmap_write(data->regmap, CTF2301_PWM_VALUE, map_val);
+	if (!ret)
+		data->pwm_value = val;
+	mutex_unlock(&data->pwm_lock);
+
+	return ret;
 }
 
 static int ctf2301_write_pwm(struct device *dev, u32 attr, long val)
@@ -170,23 +204,12 @@ static int ctf2301_read_pwm(struct device *dev, u32 attr, long *val)
 	struct ctf2301 *ctf2301 = dev_get_drvdata(dev);
 	int err;
 	unsigned int reg_val;
-	unsigned int freq_code;
 
 	switch (attr) {
 	case hwmon_pwm_input:
-		err = regmap_read(ctf2301->regmap, CTF2301_PWM_VALUE, &reg_val);
-		if (err)
-			return err;
-
-		freq_code = ctf2301->pwm_freq_code;
-
-		if (freq_code == 0)
-			freq_code = 1;
-
-		*val = (reg_val * CTF2301_PWM_MAX) / (freq_code * 2);
-
-		if (*val > CTF2301_PWM_MAX)
-			*val = CTF2301_PWM_MAX;
+		mutex_lock(&ctf2301->pwm_lock);
+		*val = ctf2301->pwm_value;
+		mutex_unlock(&ctf2301->pwm_lock);
 		break;
 
 	case hwmon_pwm_freq:
@@ -277,17 +300,10 @@ static int ctf2301_cdev_get_cur_state(struct thermal_cooling_device *cdev,
                                  unsigned long *state)
 {
 	struct ctf2301 *data = cdev->devdata;
-	unsigned int reg_val;
-	long val;
-	int err;
 
-	err = regmap_read(data->regmap, CTF2301_PWM_VALUE, &reg_val);
-	if (err)
-		return err;
-
-	val = (reg_val * CTF2301_PWM_MAX) / (data->pwm_freq_code * 2);
-
-	*state = clamp_val(val, 0, CTF2301_PWM_MAX);
+	mutex_lock(&data->pwm_lock);
+	*state = data->pwm_value;
+	mutex_unlock(&data->pwm_lock);
 
 	return 0;
 }
@@ -356,6 +372,7 @@ static int ctf2301_probe(struct i2c_client *client)
 		return -ENOMEM;
 
 	ctf2301->client = client;
+	mutex_init(&ctf2301->pwm_lock);
 
 	i2c_set_clientdata(client, ctf2301);
 
@@ -382,14 +399,16 @@ static int ctf2301_probe(struct i2c_client *client)
 		return dev_err_probe(dev, err,
 				     "failed to write CTF2301_PWM_AND_TACH_CFG");
 
-	/* default to enable the fan */
-	ctf2301_update_pwm(ctf2301, CTF2301_PWM_MAX);
+	/* Start logically off; do not generate a probe-time full-speed pulse. */
+	if (ctf2301_force_pwm(ctf2301, CTF2301_IDLE_PWM))
+		dev_warn(dev, "failed to initialize idle PWM\n");
+	ctf2301->pwm_value = 0;
 	/*
 	 * Fail-safe default for suspend/resume: if the very first suspend
-	 * ever hits a PWM read failure before a real value was cached, fall
-	 * back to full speed rather than leaving the fan off.
+	 * ever hits a PWM read failure before a real value was cached, leave
+	 * the fan in the logical-off state rather than generating a pulse.
 	 */
-	ctf2301->pwm_save = CTF2301_PWM_MAX;
+	ctf2301->pwm_save = 0;
 
 	hwmon_dev = devm_hwmon_device_register_with_info(dev, client->name, ctf2301,
 							 &ctf2301_chip_info,
@@ -440,7 +459,7 @@ static int ctf2301_suspend(struct device *dev)
 	}
 
 	/* Set fan to stop (PWM = 0) */
-	ret = ctf2301_update_pwm(ctf2301, 0);
+	ret = ctf2301_force_pwm(ctf2301, 0);
 	if (ret)
 		dev_warn(dev, "failed to stop fan during suspend: %d\n", ret);
 
